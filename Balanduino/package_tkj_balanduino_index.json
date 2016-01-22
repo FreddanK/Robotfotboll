@@ -1,0 +1,43 @@
+{
+  "packages": [
+    {
+      "name": "Balanduino",
+      "maintainer": "TKJ Electronics",
+      "websiteURL": "http://balanduino.com/",
+      "email": "support@tkjelectronics.com",
+      "help": {
+        "online": "http://forum.balanduino.com/"
+      },
+      "platforms": [
+        {
+          "name": "Balanduino",
+          "architecture": "avr",
+          "version": "1.1.0",
+          "category": "Balanduino",
+          "help": {
+            "online": "http://forum.balanduino.com/"
+          },
+          "url": "https://github.com/TKJElectronics/Balanduino/releases/download/1.1.0/Balanduino-hardware.zip",
+          "archiveFileName": "Balanduino-hardware.zip",
+          "checksum": "SHA-256:68d71007bf25fe2a4028510a68d3536e98159ec188429937b8fcc08846b19cae",
+          "size": "6944206",
+          "boards": [
+            {"name": "Balanduino"}
+          ],
+          "toolsDependencies": [
+            {
+              "packager": "arduino",
+              "name": "avr-gcc",
+              "version": "4.8.1-arduino5"
+            },
+            {
+              "packager": "arduino",
+              "name": "avrdude",
+              "version": "6.0.1-arduino5"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
