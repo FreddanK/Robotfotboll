@@ -63,7 +63,5 @@ void restoreEEPROMValues() {
   cfg.accYzero = cfg.accZzero = 0.0f;
   cfg.leftMotorScaler = cfg.rightMotorScaler = 1.0f;
 
-  cfg.bindSpektrum = false;
-
   updateConfig();
 }

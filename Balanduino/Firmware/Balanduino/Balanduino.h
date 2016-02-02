@@ -35,11 +35,6 @@ static const uint16_t PWMVALUE = F_CPU / PWM_FREQUENCY / 2; // The frequency is 
 
 /* Used to make commands more readable */
 enum Command {
-  updatePS3,
-  updatePS4,
-  updateWii,
-  updateXbox,
-  updateSpektrum,
   stop,
   forward,
   backward,
@@ -111,8 +106,6 @@ enum Command {
   #define buzzer P11 /* A4 */
 #endif
 
-#define spektrumBindPin P0 // Pin used to bind with the Spektrum satellite receiver - you can use any pin while binding, but you should connect it to RX0 afterwards
-
 #define LED MAKE_PIN(LED_BUILTIN) // LED_BUILTIN is defined in pins_arduino.h in the hardware add-on
 
 #define VBAT A5 // Not broken out - used for battery voltage measurement
@@ -165,10 +158,6 @@ static uint32_t reportTimer; // This is used to set a delay between sending repo
 static uint32_t ledTimer; // Used to update the LEDs to indicate battery level on the PS3, PS4, Wii and Xbox controllers
 static uint32_t blinkTimer; // Used to blink the built in LED, starts blinking faster upon an incoming Bluetooth request
 
-/* Used to rumble controllers upon connection */
-static bool ps3RumbleEnable, wiiRumbleEnabled, ps4RumbleEnabled; // These are used to turn rumble off again on the Wiimote and PS4 controller and to turn on rumble on the PS3 controller
-static bool ps3RumbleDisable, xboxRumbleDisable; // Used to turn rumble off again on the PS3 and Xbox controller
-
 static bool steerStop = true; // Stop by default
 static bool stopped; // This is used to set a new target position after braking
 
@@ -190,21 +179,6 @@ static int32_t lastWheelPosition; // Used to calculate the wheel velocity
 static int32_t wheelVelocity; // Wheel velocity based on encoder readings
 static int32_t targetPosition; // The encoder position the robot should be at
 
-// Variables used for Spektrum receiver
-extern uint16_t rcValue[]; // Channel values
-static bool spekConnected; // True if spektrum receiver is connected
-static uint32_t spekConnectedTimer; // Timer used to check if the connection is dropped
-
-#define RC_CHAN_THROTTLE 0
-#define RC_CHAN_ROLL     1
-#define RC_CHAN_PITCH    2
-#define RC_CHAN_YAW      3
-#define RC_CHAN_AUX1     4
-#define RC_CHAN_AUX2     5
-#define RC_CHAN_AUX3     6
-#if (SPEKTRUM == 2048) // 8 channels
-#define RC_CHAN_AUX4     7
-#endif
 
 // Encoder values
 #if defined(PIN_CHANGE_INTERRUPT_VECTOR_LEFT) && defined(PIN_CHANGE_INTERRUPT_VECTOR_RIGHT)
@@ -235,11 +209,6 @@ static uint32_t spekConnectedTimer; // Timer used to check if the connection is 
 // We use inline to eliminates the size and speed overhead of calling and returning from a function that is only used once.
 static inline void readSPPData();
 static inline void readUsb();
-static void updateLEDs();
-static void onInitPS3();
-static void onInitPS4();
-static void onInitWii();
-static void onInitXbox();
 static void steer(Command command);
 static float scale(float input, float inputMin, float inputMax, float outputMin, float outputMax);
 
@@ -264,8 +233,6 @@ static int32_t readLeftEncoder();
 static int32_t readRightEncoder();
 int32_t getWheelsPosition();
 
-static inline void bindSpektrum();
-static void readSpektrum(uint8_t input);
 
 static inline void checkSerialData();
 static void printMenu();

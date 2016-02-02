@@ -27,12 +27,7 @@
 /* Use this to enable and disable the different options */
 #define ENABLE_TOOLS
 #define ENABLE_SPP
-#define ENABLE_PS3
-#define ENABLE_PS4
-#define ENABLE_WII
-#define ENABLE_XBOX
 #define ENABLE_ADK
-#define ENABLE_SPEKTRUM
 
 #include "Balanduino.h"
 #include <Arduino.h> // Standard Arduino header
@@ -47,26 +42,14 @@
 // The USB libraries are located at the following link: https://github.com/felis/USB_Host_Shield_2.0
 #include <Kalman.h> // Kalman filter library - see: http://blog.tkjelectronics.dk/2012/09/a-practical-approach-to-kalman-filter-and-how-to-implement-it/
 
-#ifdef ENABLE_XBOX
-#include <XBOXRECV.h>
-#endif
 #ifdef ENABLE_SPP
 #include <SPP.h>
-#endif
-#ifdef ENABLE_PS3
-#include <PS3BT.h>
-#endif
-#ifdef ENABLE_PS4
-#include <PS4BT.h>
-#endif
-#ifdef ENABLE_WII
-#include <Wii.h>
 #endif
 
 // Create the Kalman library instance
 Kalman kalman; // See https://github.com/TKJElectronics/KalmanFilter for source code
 
-#if defined(ENABLE_SPP) || defined(ENABLE_PS3) || defined(ENABLE_PS4) || defined(ENABLE_WII) || defined(ENABLE_XBOX) || defined(ENABLE_ADK)
+#if defined(ENABLE_SPP) || defined(ENABLE_ADK)
 #define ENABLE_USB
 USB Usb; // This will take care of all USB communication
 #else
@@ -84,11 +67,8 @@ ADK adk(&Usb, "TKJ Electronics", // Manufacturer Name
               "1234"); // Serial Number - this is not used
 #endif
 
-#ifdef ENABLE_XBOX
-XBOXRECV Xbox(&Usb); // You have to connect a Xbox wireless receiver to the Arduino to control it with a wireless Xbox controller
-#endif
 
-#if defined(ENABLE_SPP) || defined(ENABLE_PS3) || defined(ENABLE_PS4) || defined(ENABLE_WII)
+#if defined(ENABLE_SPP)
 #define ENABLE_BTD
 #include <usbhub.h> // Some dongles can have a hub inside
 USBHub Hub(&Usb); // Some dongles have a hub inside
@@ -99,23 +79,6 @@ BTD Btd(&Usb); // This is the main Bluetooth library, it will take care of all t
 SPP SerialBT(&Btd, "Balanduino", "0000"); // The SPP (Serial Port Protocol) emulates a virtual Serial port, which is supported by most computers and mobile phones
 #endif
 
-#ifdef ENABLE_PS3
-PS3BT PS3(&Btd); // The PS3 library supports all three official controllers: the Dualshock 3, Navigation and Move controller
-#endif
-
-#ifdef ENABLE_PS4
-//PS4BT PS4(&Btd, PAIR); // You should create the instance like this if you want to pair with a PS4 controller, then hold PS and Share on the PS4 controller
-// Or you can simply send "CPP;" to the robot to start the pairing sequence
-// This can also be done using the Android or via the serial port
-PS4BT PS4(&Btd); // The PS4BT library supports the PS4 controller via Bluetooth
-#endif
-
-#ifdef ENABLE_WII
-WII Wii(&Btd); // The Wii library can communicate with Wiimotes and the Nunchuck and Motion Plus extension and finally the Wii U Pro Controller
-//WII Wii(&Btd,PAIR); // You will have to pair with your Wiimote first by creating the instance like this and the press 1+2 on the Wiimote or press sync if you are using a Wii U Pro Controller
-// Or you can simply send "CPW;" to the robot to start the pairing sequence
-// This can also be done using the Android or via the serial port
-#endif
 
 void setup() {
   /* Setup buzzer pin */
@@ -124,10 +87,6 @@ void setup() {
   /* Read the PID values, target angle and other saved values in the EEPROM */
   if (!checkInitializationFlags()) {
     readEEPROMValues(); // Only read the EEPROM values if they have not been restored
-#ifdef ENABLE_SPEKTRUM
-    if (cfg.bindSpektrum) // If flag is set, then bind with Spektrum satellite receiver
-      bindSpektrum();
-#endif
   } else { // Indicate that the EEPROM values have been reset by turning on the buzzer
     buzzer::Set();
     delay(1000);
@@ -201,21 +160,6 @@ void setup() {
     buzzer::Set();
     while (1); // Halt
   }
-#endif
-
-  /* Attach onInit function */
-  // This is used to set the LEDs according to the voltage level and vibrate the controller to indicate the new connection
-#ifdef ENABLE_PS3
-  PS3.attachOnInit(onInitPS3);
-#endif
-#ifdef ENABLE_PS4
-  PS4.attachOnInit(onInitPS4);
-#endif
-#ifdef ENABLE_WII
-  Wii.attachOnInit(onInitWii);
-#endif
-#ifdef ENABLE_XBOX
-  Xbox.attachOnInit(onInitXbox);
 #endif
 
   /* Setup IMU */
@@ -297,20 +241,6 @@ void loop() {
     while (1);
   }
 
-#if defined(ENABLE_WII) || defined(ENABLE_PS4) // We have to read much more often from the Wiimote and PS4 controller to decrease latency
-  bool readUSB = false;
-#ifdef ENABLE_WII
-  if (Wii.wiimoteConnected)
-    readUSB = true;
-#endif
-#ifdef ENABLE_PS4
-  if (PS4.connected())
-    readUSB = true;
-#endif
-  if (readUSB)
-    Usb.Task();
-#endif
-
   /* Calculate pitch */
   while (i2cRead(0x3D, i2cBuffer, 8));
   int16_t accY = ((i2cBuffer[0] << 8) | i2cBuffer[1]);
@@ -338,10 +268,6 @@ void loop() {
   kalmanTimer = timer;
   //Serial.print(accAngle);Serial.print('\t');Serial.print(gyroAngle);Serial.print('\t');Serial.println(pitch);
 
-#if defined(ENABLE_WII) || defined(ENABLE_PS4) // We have to read much more often from the Wiimote and PS4 controller to decrease latency
-  if (readUSB)
-    Usb.Task();
-#endif
 
   /* Drive motors */
   timer = micros();
@@ -381,10 +307,10 @@ void loop() {
   }
 
   /* Read the Bluetooth dongle and send PID and IMU values */
-#if defined(ENABLE_TOOLS) || defined(ENABLE_SPEKTRUM)
+#if defined(ENABLE_TOOLS)
   checkSerialData();
 #endif
-#if defined(ENABLE_USB) || defined(ENABLE_SPEKTRUM)
+#if defined(ENABLE_USB)
   readUsb();
 #endif
 #if defined(ENABLE_TOOLS) || defined(ENABLE_SPP)
