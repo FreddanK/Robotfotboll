@@ -28,11 +28,13 @@
 #define ENABLE_TOOLS
 #define ENABLE_SPP
 #define ENABLE_ADK
+//#define ENABLE_AI
 
 #include "Balanduino.h"
 #include <Arduino.h> // Standard Arduino header
 #include <Wire.h> // Official Arduino Wire library
 #include <SPI.h> // Official Arduino SPI library
+#include "controller.h"
 
 #ifdef ENABLE_ADK
 #include <adk.h>
@@ -315,6 +317,10 @@ void loop() {
 #endif
 #if defined(ENABLE_TOOLS) || defined(ENABLE_SPP)
   printValues();
+#endif
+
+#if defined(ENABLE_AI)
+  setControlOffset();
 #endif
 
 #ifdef ENABLE_BTD
