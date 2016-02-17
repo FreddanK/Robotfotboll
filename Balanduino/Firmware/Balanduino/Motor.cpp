@@ -14,6 +14,7 @@
  Web      :  http://www.tkjelectronics.com
  e-mail   :  kristianl@tkjelectronics.com
 */
+#include "Motor.h"
 #include "Balanduino.h"
 #include <Arduino.h>
 void updatePID(float restAngle, float offset, float turning, float dt) {

@@ -1,6 +1,8 @@
 #include "controller.h"
 #include "Balanduino.h"
 #include <Arduino.h>
+#include "Bluetooth.h"
+#include "Motor.h"
 
 //Set ENABLE_AI and disable ENABLE_SPP and ENABLE_ADK in Balanduino.ino to make this work
 

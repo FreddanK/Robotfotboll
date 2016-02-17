@@ -17,6 +17,7 @@
 #include "Balanduino.h"
 #include <Kalman.h>
 
+#include "EEPROM.h"
 #include "EEPROMAnything.h"
 
 cfg_t cfg; //  Struct for all the configuration values

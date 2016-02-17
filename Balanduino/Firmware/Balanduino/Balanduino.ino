@@ -24,17 +24,18 @@
  For details, see: http://balanduino.net/
 */
 
-/* Use this to enable and disable the different options */
-#define ENABLE_TOOLS
-//#define ENABLE_SPP
-//#define ENABLE_ADK
-#define ENABLE_AI
-
 #include "Balanduino.h"
 #include <Arduino.h> // Standard Arduino header
 #include <Wire.h> // Official Arduino Wire library
 #include <SPI.h> // Official Arduino SPI library
 #include "controller.h"
+#include "bluetooth.h"
+#include "EEPROM.h"
+#include "Motor.h"
+#include "i2c.h"
+#include "tools.h"
+
+Kalman kalman;
 
 #ifdef ENABLE_ADK
 #include <adk.h>
@@ -54,9 +55,6 @@
 #if defined(ENABLE_SPP) || defined(ENABLE_ADK)
 #define ENABLE_USB
 USB Usb; // This will take care of all USB communication
-#else
-#define _usb_h_ // Workaround include trap in the USB Host library
-#include <avrpins.h> // Include this from the USB Host library
 #endif
 
 #ifdef ENABLE_ADK

@@ -14,7 +14,13 @@
  Web      :  http://www.tkjelectronics.com
  e-mail   :  kristianl@tkjelectronics.com
 */
+#include "Tools.h"
 #include "Balanduino.h"
+#include "i2c.h"
+#include "EEPROM.h"
+#include "Motor.h"
+#include <Arduino.h>
+
 #if defined(ENABLE_TOOLS) || defined(ENABLE_SPEKTRUM)
 
 void checkSerialData() {

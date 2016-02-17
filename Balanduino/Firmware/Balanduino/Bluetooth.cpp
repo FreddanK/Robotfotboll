@@ -14,7 +14,12 @@
  Web      :  http://www.tkjelectronics.com
  e-mail   :  kristianl@tkjelectronics.com
 */
+#include "bluetooth.h"
 #include "Balanduino.h"
+#include "Motor.h"
+
+Command lastCommand;
+
 #if defined(ENABLE_USB)
 
 

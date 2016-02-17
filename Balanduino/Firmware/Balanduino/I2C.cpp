@@ -14,6 +14,7 @@
  Web      :  http://www.tkjelectronics.com
  e-mail   :  kristianl@tkjelectronics.com
 */
+#include "I2C.h"
 #include "Balanduino.h"
 #include <Wire.h>
 #include <SPI.h> // Official Arduino SPI library

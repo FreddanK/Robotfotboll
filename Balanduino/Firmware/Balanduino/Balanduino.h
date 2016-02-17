@@ -18,8 +18,15 @@
 #ifndef _balanduino_h_
 #define _balanduino_h_
 
+/* Use this to enable and disable the different options */
+#define ENABLE_TOOLS
+//#define ENABLE_SPP
+//#define ENABLE_ADK
+#define ENABLE_AI
+
+#include <Usb.h> // Include this from the USB Host library
 #include <Kalman.h>
-Kalman kalman;
+extern Kalman kalman;
 
 #if ARDUINO < 156 // Make sure that at least Arduino IDE version 1.5.6 is used
   #error "Please update the Arduino IDE to version 1.5.6 or newer at the following website: http://arduino.cc/en/Main/Software"
@@ -29,78 +36,12 @@ Kalman kalman;
 
 /* Firmware Version Information */
 static const char *version = "1.1.0";
-static const uint8_t eepromVersion = 3; // EEPROM version - used to restore the EEPROM values if the configuration struct have changed
+constexpr uint8_t eepromVersion = 3; // EEPROM version - used to restore the EEPROM values if the configuration struct have changed
 
 static bool sendIMUValues, sendSettings, sendInfo, sendStatusReport, sendPIDValues, sendPairConfirmation, sendKalmanValues; // Used to send out different values via Bluetooth
 
 static const uint16_t PWM_FREQUENCY = 20000; // The motor driver can handle a PWM frequency up to 20kHz
 static const uint16_t PWMVALUE = F_CPU / PWM_FREQUENCY / 2; // The frequency is given by F_CPU/(2*N*ICR) - where N is the prescaler, prescaling is used so the frequency is given by F_CPU/(2*ICR) - ICR = F_CPU/PWM_FREQUENCY/2
-
-/* Used to make commands more readable */
-enum Command {
-  stop,
-  forward,
-  backward,
-  left,
-  right,
-  imu,
-  joystick,
-} lastCommand; // This is used set a new targetPosition
-
-// These pins macros are defined in avrpins.h in the USB Host library. This allows to read and write directly to the port registers instead of using Arduino's slow digitalRead()/digitalWrite() functions
-// The source is available here: https://github.com/felis/USB_Host_Shield_2.0/blob/master/avrpins.h
-// I do this to save processing power - see this page for more information: http://www.billporter.info/ready-set-oscillate-the-fastest-way-to-change-arduino-pins/
-// Also see the Arduino port manipulation guide: http://www.arduino.cc/en/Reference/PortManipulation
-
-/* Left motor */
-#define leftA P23
-#define leftB P24
-#define leftPWM P18
-
-/* Right motor */
-#if BALANDUINO_REVISION < 13
-  #define rightA P25
-  #define rightB P26
-#else
-  #define rightA P15
-  #define rightB P16
-#endif
-#define rightPWM P17
-
-/* Pins connected to the motor drivers diagnostic pins */
-#define leftDiag P21
-#define rightDiag P22
-
-/* Encoders */
-#if BALANDUINO_REVISION < 13
-  #define leftEncoder1Pin 15 // Used for attachInterrupt
-  #define leftEncoder2Pin 30 // Used for pin change interrupt
-  #define rightEncoder1Pin 16 // Used for attachInterrupt
-  #define rightEncoder2Pin 31 // Used for pin change interrupt
-#else
-  #define leftEncoder1Pin 25 // Used for pin change interrupt
-  #define leftEncoder2Pin 26 // Used for pin change interrupt
-  #define rightEncoder1Pin 30 // Used for pin change interrupt
-  #define rightEncoder2Pin 31 // Used for pin change interrupt
-#endif
-
-#define MAKE_PIN(pin) _MAKE_PIN(pin) // Puts a P in front of the pin number, e.g. 1 becomes P1
-#define _MAKE_PIN(pin) P ## pin
-
-#define leftEncoder1 MAKE_PIN(leftEncoder1Pin)
-#define leftEncoder2 MAKE_PIN(leftEncoder2Pin)
-
-#define rightEncoder1 MAKE_PIN(rightEncoder1Pin)
-#define rightEncoder2 MAKE_PIN(rightEncoder2Pin)
-
-// You should change these to match your pins
-#if BALANDUINO_REVISION < 13
-  #define PIN_CHANGE_INTERRUPT_VECTOR_LEFT PCINT0_vect
-  #define PIN_CHANGE_INTERRUPT_VECTOR_RIGHT PCINT0_vect
-#else
-  #define PIN_CHANGE_INTERRUPT_VECTOR_LEFT PCINT1_vect
-  #define PIN_CHANGE_INTERRUPT_VECTOR_RIGHT PCINT0_vect
-#endif
 
 // Buzzer used for feedback, it can be disconnected using the jumper
 #if BALANDUINO_REVISION < 13
@@ -182,6 +123,36 @@ static int32_t lastWheelPosition; // Used to calculate the wheel velocity
 static int32_t wheelVelocity; // Wheel velocity based on encoder readings
 static int32_t targetPosition; // The encoder position the robot should be at
 
+/* Encoders */
+#if BALANDUINO_REVISION < 13
+  #define leftEncoder1Pin 15 // Used for attachInterrupt
+  #define leftEncoder2Pin 30 // Used for pin change interrupt
+  #define rightEncoder1Pin 16 // Used for attachInterrupt
+  #define rightEncoder2Pin 31 // Used for pin change interrupt
+#else
+  #define leftEncoder1Pin 25 // Used for pin change interrupt
+  #define leftEncoder2Pin 26 // Used for pin change interrupt
+  #define rightEncoder1Pin 30 // Used for pin change interrupt
+  #define rightEncoder2Pin 31 // Used for pin change interrupt
+#endif
+
+#define MAKE_PIN(pin) _MAKE_PIN(pin) // Puts a P in front of the pin number, e.g. 1 becomes P1
+#define _MAKE_PIN(pin) P ## pin
+
+#define leftEncoder1 MAKE_PIN(leftEncoder1Pin)
+#define leftEncoder2 MAKE_PIN(leftEncoder2Pin)
+
+#define rightEncoder1 MAKE_PIN(rightEncoder1Pin)
+#define rightEncoder2 MAKE_PIN(rightEncoder2Pin)
+
+// You should change these to match your pins
+#if BALANDUINO_REVISION < 13
+  #define PIN_CHANGE_INTERRUPT_VECTOR_LEFT PCINT0_vect
+  #define PIN_CHANGE_INTERRUPT_VECTOR_RIGHT PCINT0_vect
+#else
+  #define PIN_CHANGE_INTERRUPT_VECTOR_LEFT PCINT1_vect
+  #define PIN_CHANGE_INTERRUPT_VECTOR_RIGHT PCINT0_vect
+#endif
 
 // Encoder values
 #if defined(PIN_CHANGE_INTERRUPT_VECTOR_LEFT) && defined(PIN_CHANGE_INTERRUPT_VECTOR_RIGHT)
@@ -208,43 +179,5 @@ static int32_t targetPosition; // The encoder position the robot should be at
   static const float velocityScaleTurning = 70.0f;
 #endif
 
-// Function prototypes
-// We use inline to eliminates the size and speed overhead of calling and returning from a function that is only used once.
-static inline void readSPPData();
-static inline void readUsb();
-static void steer(Command command);
-static float scale(float input, float inputMin, float inputMax, float outputMin, float outputMax);
-
-static inline bool checkInitializationFlags();
-static inline void readEEPROMValues();
-static void updateConfig();
-static void restoreEEPROMValues();
-
-static uint8_t i2cWrite(uint8_t registerAddress, uint8_t data, bool sendStop);
-static uint8_t i2cWrite(uint8_t registerAddress, uint8_t *data, uint8_t length, bool sendStop);
-static uint8_t i2cRead(uint8_t registerAddress, uint8_t *data, uint8_t nbytes);
-
-static inline void updatePID(float restAngle, float offset, float turning, float dt);
-static void moveMotor(Command motor, Command direction, float speedRaw);
-static void stopMotor(Command motor);
-static inline void setPWM(Command motor, uint16_t dutyCycle);
-static void stopAndReset();
-// On newer versions of the PCB these two functions are only used in one place, so they will be inlined by the compiler.
-static inline void leftEncoder();
-static inline void rightEncoder();
-static int32_t readLeftEncoder();
-static int32_t readRightEncoder();
-int32_t getWheelsPosition();
-
-
-static inline void checkSerialData();
-static void printMenu();
-static inline void calibrateMotor();
-static void testMotorSpeed(float *leftSpeed, float *rightSpeed, float leftScaler, float rightScaler);
-static inline void calibrateAcc();
-static inline void printValues();
-static void setValues(char *input);
-static inline bool calibrateGyro();
-static bool checkMinMax(int16_t *array, uint8_t length, int16_t maxDifference);
 
 #endif
