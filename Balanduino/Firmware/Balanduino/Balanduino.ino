@@ -25,9 +25,11 @@
 */
 
 #include "Balanduino.h"
+
 #include <Arduino.h> // Standard Arduino header
 #include <Wire.h> // Official Arduino Wire library
 #include <SPI.h> // Official Arduino SPI library
+
 #include "controller.h"
 #include "bluetooth.h"
 #include "EEPROM.h"
@@ -35,7 +37,6 @@
 #include "i2c.h"
 #include "tools.h"
 
-Kalman kalman;
 
 #ifdef ENABLE_ADK
 #include <adk.h>
@@ -50,7 +51,7 @@ Kalman kalman;
 #endif
 
 // Create the Kalman library instance
-//Kalman kalman; // See https://github.com/TKJElectronics/KalmanFilter for source code
+Kalman kalman; // See https://github.com/TKJElectronics/KalmanFilter for source code
 
 #if defined(ENABLE_SPP) || defined(ENABLE_ADK)
 #define ENABLE_USB
@@ -79,8 +80,58 @@ BTD Btd(&Usb); // This is the main Bluetooth library, it will take care of all t
 SPP SerialBT(&Btd, "Balanduino", "0000"); // The SPP (Serial Port Protocol) emulates a virtual Serial port, which is supported by most computers and mobile phones
 #endif
 
+bool sendIMUValues, sendSettings, sendInfo, sendStatusReport, sendPIDValues, sendPairConfirmation, sendKalmanValues; // Used to send out different values via Bluetooth
+
+volatile int32_t leftCounter = 0;
+volatile int32_t rightCounter = 0;
+
+float batteryVoltage; // Measured battery level
+uint8_t batteryCounter; // Counter used to check if it should check the battery level
+
+float lastRestAngle; // Used to limit the new restAngle if it's much larger than the previous one
+
+/* IMU Data */
+float gyroXzero;
+uint8_t i2cBuffer[8]; // Buffer for I2C data
+
+// Results
+float accAngle, gyroAngle; // Result from raw accelerometer and gyroscope readings
+float pitch; // Result from Kalman filter
+
+float lastError; // Store last angle error
+float iTerm; // Store iTerm
+
+/* Used for timing */
+uint32_t kalmanTimer; // Timer used for the Kalman filter
+uint32_t pidTimer; // Timer used for the PID loop
+uint32_t imuTimer; // This is used to set a delay between sending IMU values
+uint32_t encoderTimer; // Timer used used to determine when to update the encoder values
+uint32_t reportTimer; // This is used to set a delay between sending report values
+uint32_t ledTimer; // Used to update the LEDs to indicate battery level on the PS3, PS4, Wii and Xbox controllers
+uint32_t blinkTimer; // Used to blink the built in LED, starts blinking faster upon an incoming Bluetooth request
+
+bool steerStop = true; // Stop by default
+bool stopped; // This is used to set a new target position after braking
+
+bool layingDown = true; // Use to indicate if the robot is laying down
+
+float targetOffset = 0.0f; // Offset for going forward and backward
+float turningOffset = 0.0f; // Offset for turning left and right
+
+char dataInput[30]; // Incoming data buffer
+bool bluetoothData; // True if data received is from the Bluetooth connection
+float sppData1, sppData2; // Data send via SPP connection
+
+bool commandSent; // This is used so multiple controller can be used at once
+
+uint32_t receiveControlTimer;
+
+int32_t lastWheelPosition; // Used to calculate the wheel velocity
+int32_t wheelVelocity; // Wheel velocity based on encoder readings
+int32_t targetPosition; // The encoder position the robot should be at
 
 void setup() {
+  
   /* Setup buzzer pin */
   buzzer::SetDirWrite();
 
@@ -299,7 +350,7 @@ void loop() {
     if (batteryCounter >= 10) { // Measure battery every 1s
       batteryCounter = 0;
       batteryVoltage = (float)analogRead(VBAT) / 63.050847458f; // VBAT is connected to analog input 5 which is not broken out. This is then connected to a 47k-12k voltage divider - 1023.0/(3.3/(12.0/(12.0+47.0))) = 63.050847458
-      if (batteryVoltage < 10.2 && batteryVoltage > 5) // Equal to 3.4V per cell - don't turn on if it's below 5V, this means that no battery is connected
+      if (batteryVoltage < 11.1 && batteryVoltage > 5) // Equal to 3.7V per cell - don't turn on if it's below 5V, this means that no battery is connected
         buzzer::Set();
       else
         buzzer::Clear();

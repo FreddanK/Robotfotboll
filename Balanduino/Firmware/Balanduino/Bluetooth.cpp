@@ -14,9 +14,11 @@
  Web      :  http://www.tkjelectronics.com
  e-mail   :  kristianl@tkjelectronics.com
 */
-#include "bluetooth.h"
+#include "Bluetooth.h"
+
 #include "Balanduino.h"
 #include "Motor.h"
+#include "Tools.h"
 
 Command lastCommand;
 

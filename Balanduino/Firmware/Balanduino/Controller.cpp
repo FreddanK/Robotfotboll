@@ -11,17 +11,17 @@ void setControlOffset(){
   int time_since_start = millis();
   steerStop = false;
   if(time_since_start>2000 && time_since_start<5000){
-    targetOffset = scale(30, 0, 36, 0, cfg.controlAngleLimit);
+    targetOffset = scale(10, 0, 36, 0, cfg.controlAngleLimit);
     turningOffset = scale(0, 0, 45, 0, cfg.turningLimit);
     targetPosition = getWheelsPosition();
     stopped = false;
   }
   else if(time_since_start>6000 && time_since_start<8000){
     targetOffset = scale(0, 0, 36, 0, cfg.controlAngleLimit);
-    turningOffset = scale(20, 0, 45, 0, cfg.turningLimit);
+    turningOffset = scale(17, 0, 45, 0, cfg.turningLimit);
   }
   else if(time_since_start>9000 && time_since_start<12000){
-    targetOffset = scale(30, 0, 36, 0, cfg.controlAngleLimit);
+    targetOffset = scale(10, 0, 36, 0, cfg.controlAngleLimit);
     turningOffset = scale(0, 0, 45, 0, cfg.turningLimit);
     targetPosition = getWheelsPosition();
     stopped = false;
