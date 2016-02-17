@@ -14,6 +14,8 @@
  Web      :  http://www.tkjelectronics.com
  e-mail   :  kristianl@tkjelectronics.com
 */
+#include "Balanduino.h"
+#include <Kalman.h>
 
 #include "EEPROMAnything.h"
 

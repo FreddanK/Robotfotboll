@@ -18,6 +18,9 @@
 #ifndef _balanduino_h_
 #define _balanduino_h_
 
+#include <Kalman.h>
+Kalman kalman;
+
 #if ARDUINO < 156 // Make sure that at least Arduino IDE version 1.5.6 is used
   #error "Please update the Arduino IDE to version 1.5.6 or newer at the following website: http://arduino.cc/en/Main/Software"
 #endif

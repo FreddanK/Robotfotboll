@@ -14,7 +14,7 @@
  Web      :  http://www.tkjelectronics.com
  e-mail   :  kristianl@tkjelectronics.com
 */
-
+#include "Balanduino.h"
 #if defined(ENABLE_TOOLS) || defined(ENABLE_SPEKTRUM)
 
 void checkSerialData() {

@@ -26,9 +26,9 @@
 
 /* Use this to enable and disable the different options */
 #define ENABLE_TOOLS
-#define ENABLE_SPP
-#define ENABLE_ADK
-//#define ENABLE_AI
+//#define ENABLE_SPP
+//#define ENABLE_ADK
+#define ENABLE_AI
 
 #include "Balanduino.h"
 #include <Arduino.h> // Standard Arduino header
@@ -42,14 +42,14 @@
 
 // These are all open source libraries written by Kristian Lauszus, TKJ Electronics
 // The USB libraries are located at the following link: https://github.com/felis/USB_Host_Shield_2.0
-#include <Kalman.h> // Kalman filter library - see: http://blog.tkjelectronics.dk/2012/09/a-practical-approach-to-kalman-filter-and-how-to-implement-it/
+//#include <Kalman.h> // Kalman filter library - see: http://blog.tkjelectronics.dk/2012/09/a-practical-approach-to-kalman-filter-and-how-to-implement-it/
 
 #ifdef ENABLE_SPP
 #include <SPP.h>
 #endif
 
 // Create the Kalman library instance
-Kalman kalman; // See https://github.com/TKJElectronics/KalmanFilter for source code
+//Kalman kalman; // See https://github.com/TKJElectronics/KalmanFilter for source code
 
 #if defined(ENABLE_SPP) || defined(ENABLE_ADK)
 #define ENABLE_USB
