@@ -20,9 +20,9 @@
 
 /* Use this to enable and disable the different options */
 #define ENABLE_TOOLS
-#define ENABLE_SPP
-#define ENABLE_ADK
-//#define ENABLE_AI
+//#define ENABLE_SPP
+//#define ENABLE_ADK
+#define ENABLE_AI
 
 #ifdef ENABLE_ADK
 #include <adk.h>

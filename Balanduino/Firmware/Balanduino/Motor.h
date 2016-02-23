@@ -1,9 +1,10 @@
 #ifndef _motor_h_
 #define _motor_h_
 
-#include <Usb.h>
-#include "Bluetooth.h"
 #include <stdint.h> // Needed for uint8_t, uint16_t etc.
+#include <Usb.h>
+
+#include "Bluetooth.h"
 
 // These pins macros are defined in avrpins.h in the USB Host library. This allows to read and write directly to the port registers instead of using Arduino's slow digitalRead()/digitalWrite() functions
 // The source is available here: https://github.com/felis/USB_Host_Shield_2.0/blob/master/avrpins.h

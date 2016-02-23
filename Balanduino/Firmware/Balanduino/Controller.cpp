@@ -1,6 +1,8 @@
 #include "controller.h"
-#include "Balanduino.h"
+
 #include <Arduino.h>
+
+#include "Balanduino.h"
 #include "Bluetooth.h"
 #include "Motor.h"
 

@@ -30,12 +30,12 @@
 #include <Wire.h> // Official Arduino Wire library
 #include <SPI.h> // Official Arduino SPI library
 
-#include "controller.h"
-#include "bluetooth.h"
+#include "Controller.h"
+#include "Bluetooth.h"
 #include "EEPROM.h"
 #include "Motor.h"
-#include "i2c.h"
-#include "tools.h"
+#include "I2C.h"
+#include "Tools.h"
 
 
 #ifdef ENABLE_ADK

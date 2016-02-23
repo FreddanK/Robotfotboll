@@ -14,10 +14,10 @@
  Web      :  http://www.tkjelectronics.com
  e-mail   :  kristianl@tkjelectronics.com
 */
-#include "Balanduino.h"
-#include <Kalman.h>
-
 #include "EEPROM.h"
+
+#include <Kalman.h>
+#include "Balanduino.h"
 #include "EEPROMAnything.h"
 
 cfg_t cfg; //  Struct for all the configuration values

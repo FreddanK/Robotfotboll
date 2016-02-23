@@ -15,11 +15,14 @@
  e-mail   :  kristianl@tkjelectronics.com
 */
 #include "Tools.h"
+
+#include <Arduino.h>
+
 #include "Balanduino.h"
-#include "i2c.h"
+#include "I2C.h"
 #include "EEPROM.h"
 #include "Motor.h"
-#include <Arduino.h>
+
 
 #if defined(ENABLE_TOOLS) || defined(ENABLE_SPEKTRUM)
 
