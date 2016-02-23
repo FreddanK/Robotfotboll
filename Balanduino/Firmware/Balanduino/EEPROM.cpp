@@ -16,7 +16,6 @@
 */
 #include "EEPROM.h"
 
-#include <Kalman.h>
 #include "Balanduino.h"
 #include "EEPROMAnything.h"
 

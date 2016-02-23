@@ -74,7 +74,7 @@ void readUsb() {
 
 #endif // defined(ENABLE_USB)
 
-#if defined(ENABLE_SPP) || defined(ENABLE_TOOLS)
+
 void steer(Command command) {
   commandSent = true; // Used to see if there has already been send a command or not
 
@@ -125,4 +125,4 @@ float scale(float input, float inputMin, float inputMax, float outputMin, float 
     output = outputMin;
   return output;
 }
-#endif // defined(ENABLE_SPP) || defined(ENABLE_TOOLS)
+

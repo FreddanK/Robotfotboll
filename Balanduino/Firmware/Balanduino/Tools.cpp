@@ -24,50 +24,32 @@
 #include "Motor.h"
 
 
-#if defined(ENABLE_TOOLS) || defined(ENABLE_SPEKTRUM)
+#ifdef ENABLE_TOOLS
 
 void checkSerialData() {
   if (Serial.available()) {
     int input = Serial.read();
-#ifdef ENABLE_TOOLS
     if (input == 'm')
       printMenu();
     else {
-#endif
-#ifdef ENABLE_SPEKTRUM
-      readSpektrum(static_cast<uint8_t> (input)); // Intentional cast
-#endif
-#ifdef ENABLE_TOOLS
       dataInput[0] = static_cast<char> (input); // Intentional cast
       delay(2); // Wait for rest of data
       uint8_t i = 1;
-#endif
       while (1) {
         input = Serial.read();
         if (input == -1) // Error while reading the string
           return;
-#ifdef ENABLE_SPEKTRUM
-        readSpektrum(static_cast<uint8_t> (input)); // Intentional cast
-#endif
-#ifdef ENABLE_TOOLS
         dataInput[i] = static_cast<char> (input); // Intentional cast
         if (dataInput[i] == ';') // Keep reading until it reads a semicolon
           break;
         if (++i >= sizeof(dataInput) / sizeof(dataInput[0])) // String is too long
           return;
-#endif
       }
-#ifdef ENABLE_TOOLS
       bluetoothData = false;
       setValues(dataInput);
     }
-#endif
   }
 }
-
-#endif // defined(ENABLE_TOOLS) || defined(ENABLE_SPEKTRUM)
-
-#ifdef ENABLE_TOOLS
 
 void printMenu() {
   Serial.println(F("\r\n========================================== Menu ==========================================\r\n"));
@@ -101,17 +83,7 @@ void printMenu() {
   Serial.println(F("CS;\t\t\t\tSend stop command"));
   Serial.println(F("CJ,x,y;\t\t\t\tSteer robot using x,y-coordinates"));
   Serial.println(F("CM,pitch,roll;\t\t\tSteer robot using pitch and roll"));
-#ifdef ENABLE_WII
-  Serial.println(F("CPW;\t\t\t\tStart paring sequence with Wiimote"));
-#endif
-#ifdef ENABLE_PS4
-  Serial.println(F("CPP;\t\t\t\tStart paring sequence with PS4 controller"));
-#endif
-  Serial.println(F("CR;\t\t\t\tRestore default EEPROM values\r\n"));
 
-#ifdef ENABLE_SPEKTRUM
-  Serial.println(F("BS;\t\t\t\tBind with Spektrum satellite receiver"));
-#endif
   Serial.println(F("\r\n==========================================================================================\r\n"));
 }
 
@@ -196,7 +168,8 @@ void calibrateMotor() {
 }
 
 void testMotorSpeed(float *leftSpeed, float *rightSpeed, float leftScaler, float rightScaler) {
-  int32_t lastLeftPosition = readLeftEncoder(), lastRightPosition = readRightEncoder();
+  int32_t lastLeftPosition = readLeftEncoder()
+  int32_t lastRightPosition = readRightEncoder();
 
   Serial.println(F("Velocity (L), Velocity (R), Speed value (L), Speed value (R)"));
   while (Serial.read() == -1) {
@@ -332,14 +305,6 @@ void setValues(char *input) {
 #endif
   }
 
-#ifdef ENABLE_SPEKTRUM
-  else if (input[0] == 'B' && input[1] == 'S') { // Bind with Spektrum satellite receiver on next power up
-    Serial.println(F("Now turn the Balanduino and the satellite receiver off by removing the power. The next time it turns on it will start the binding process with the satellite receiver"));
-    cfg.bindSpektrum = true; // After this you should turn off the robot and then turn it on again
-    updateConfig();
-  }
-#endif
-
   else if (input[0] == 'A' && input[1] == 'C') // Accelerometer calibration
     calibrateAcc();
   else if (input[0] == 'M' && input[1] == 'C') // Motor calibration
@@ -426,22 +391,7 @@ void setValues(char *input) {
       sppData2 = atof(strtok(NULL, ";")); // Roll
       steer(imu);
     }
-#if defined(ENABLE_WII) || defined(ENABLE_PS4)
-    else if (input[1] == 'P') { // Pair
-#ifdef ENABLE_WII
-      if (input[2] == 'W') { // Pair with a new Wiimote or Wii U Pro Controller
-        Wii.pair();
-        sendPairConfirmation = true;
-      }
-#endif
-#ifdef ENABLE_PS4
-      if (input[2] == 'P') { // Pair with PS4 controller
-        PS4.pair();
-        sendPairConfirmation = true;
-      }
-#endif
-    }
-#endif // defined(ENABLE_WII) || defined(ENABLE_PS4)
+
     else if (input[1] == 'R') {
       restoreEEPROMValues(); // Restore the default EEPROM values
       sendPIDValues = true;

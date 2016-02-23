@@ -36,7 +36,6 @@ void moveMotor(Command motor, Command direction, float speedRaw);
 void stopMotor(Command motor);
 void setPWM(Command motor, uint16_t dutyCycle);
 void stopAndReset();
-// On newer versions of the PCB these two functions are only used in one place, so they will be inlined by the compiler.
 void leftEncoder();
 void rightEncoder();
 int32_t readLeftEncoder();
