@@ -23,6 +23,13 @@
 #include "Balanduino.h"
 #include "I2C.h"
 
+// Buzzer used for feedback, it can be disconnected using the jumper
+#if BALANDUINO_REVISION < 13
+  #define buzzer P5
+#else
+  #define buzzer P11 /* A4 */
+#endif
+
 /* Left motor */
 #define leftA P23
 #define leftB P24
@@ -269,6 +276,73 @@ int32_t Motor::getWheelsPosition() {
   return leftCounter + rightCounter;
 }
 
+void Motor::checkMotors() {
+    if (!leftDiag::IsSet() || !rightDiag::IsSet()) { // Motor driver will pull these low on error
+      buzzer::Set();
+      stopMotor(left);
+      stopMotor(right);
+      while (1);
+  }
+}
+
+void Motor::calculatePitch(){
+  /* Calculate pitch */
+  while (i2cRead(0x3D, i2cBuffer, 8));
+  int16_t accY = ((i2cBuffer[0] << 8) | i2cBuffer[1]);
+  int16_t accZ = ((i2cBuffer[2] << 8) | i2cBuffer[3]);
+  int16_t gyroX = ((i2cBuffer[6] << 8) | i2cBuffer[7]);
+
+  // atan2 outputs the value of -π to π (radians) - see http://en.wikipedia.org/wiki/Atan2
+  // We then convert it to 0 to 2π and then from radians to degrees
+  accAngle = (atan2((float)accY - cfg.accYzero, (float)accZ - cfg.accZzero) + PI) * RAD_TO_DEG;
+
+  uint32_t timer = micros();
+  // This fixes the 0-360 transition problem when the accelerometer angle jumps between 0 and 360 degrees
+  if ((accAngle < 90 && pitch > 270) || (accAngle > 270 && pitch < 90)) {
+    kalman.setAngle(accAngle);
+    pitch = accAngle;
+    gyroAngle = accAngle;
+  } else {
+    float gyroRate = ((float)gyroX - gyroXzero) / 131.0f; // Convert to deg/s
+    float dt = (float)(timer - kalmanTimer) / 1000000.0f;
+    gyroAngle += gyroRate * dt; // Gyro angle is only used for debugging
+    if (gyroAngle < 0 || gyroAngle > 360)
+      gyroAngle = pitch; // Reset the gyro angle when it has drifted too much
+    pitch = kalman.getAngle(accAngle, gyroRate, dt); // Calculate the angle using a Kalman filter
+  }
+  kalmanTimer = timer;
+}
+
+void Motor::driveMotors(){
+  /* Drive motors */
+  timer = micros();
+  // If the robot is laying down, it has to be put in a vertical position before it starts balancing
+  // If it's already balancing it has to be ±45 degrees before it stops trying to balance
+  if ((layingDown && (pitch < cfg.targetAngle - 10 || pitch > cfg.targetAngle + 10)) || (!layingDown && (pitch < cfg.targetAngle - 45 || pitch > cfg.targetAngle + 45))) {
+    layingDown = true; // The robot is in a unsolvable position, so turn off both motors and wait until it's vertical again
+    stopAndReset();
+  } else {
+    layingDown = false; // It's no longer laying down
+    updatePID(cfg.targetAngle, targetOffset, turningOffset, (float)(timer - pidTimer) / 1000000.0f);
+  }
+  pidTimer = timer;
+}
+
+void Motor::updateEncoders(){
+  /* Update encoders */
+  timer = millis();
+  if (timer - encoderTimer >= 100) { // Update encoder values every 100ms
+    encoderTimer = timer;
+    int32_t wheelPosition = getWheelsPosition();
+    wheelVelocity = wheelPosition - lastWheelPosition;
+    lastWheelPosition = wheelPosition;
+    //Serial.print(wheelPosition);Serial.print('\t');Serial.print(targetPosition);Serial.print('\t');Serial.println(wheelVelocity);
+    if (abs(wheelVelocity) <= 40 && !stopped) { // Set new targetPosition if braking
+      targetPosition = wheelPosition;
+      stopped = true;
+    }
+}
+
 void Motor::setupEncoders(){
   /* Setup encoders */
   leftEncoder1::SetDirRead();
@@ -388,15 +462,6 @@ void Motor::setupTiming(){
   blinkTimer = imuTimer;
 }
 
-void Motor::checkMotors() {
-    if (!leftDiag::IsSet() || !rightDiag::IsSet()) { // Motor driver will pull these low on error
-      buzzer::Set();
-      stopMotor(left);
-      stopMotor(right);
-      while (1);
-  }
-}
-
 void Motor::calibrateAndReset() {
   /* Calibrate gyro zero value */
   while (calibrateGyro()); // Run again if the robot is moved while calibrating
@@ -405,7 +470,7 @@ void Motor::calibrateAndReset() {
   stopAndReset(); // Turn off motors and reset different values
 }
 
-void Motor::setupBuzzer(){
+void Motor::initBuzzer(){
   buzzer::SetDirWrite();
 }
 void Motor::setBuzzer(){

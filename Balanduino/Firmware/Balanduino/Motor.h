@@ -47,22 +47,23 @@ public:
   int32_t readLeftEncoder();
   int32_t readRightEncoder();
   int32_t getWheelsPosition();
+
+  void checkmotors();
+  void calculatePitch();
+  void driveMotors();
+  void updateEncoders();
   
   void setupEncoders();
   void setupMotors();
   void setupIMU();
   void setupTiming();
-  void checkmotors();
   void calibrateAndReset();
 
-  void setupBuzzer();
+  void initBuzzer();
   void setBuzzer();
   void clearBuzzer();
   void soundBuzzer(int delay);
 }
-
-
-
 
 
 
