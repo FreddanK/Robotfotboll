@@ -102,7 +102,6 @@ typedef struct {
   float Qangle, Qbias, Rmeasure; // Kalman filter values
   float accYzero, accZzero; // Accelerometer zero values
   float leftMotorScaler, rightMotorScaler;
-  bool bindSpektrum;
 } cfg_t;
 
 extern cfg_t cfg;
@@ -153,62 +152,6 @@ constexpr uint16_t receiveControlTimeout = 500; // After how long time should it
 extern int32_t lastWheelPosition; // Used to calculate the wheel velocity
 extern int32_t wheelVelocity; // Wheel velocity based on encoder readings
 extern int32_t targetPosition; // The encoder position the robot should be at
-
-/* Encoders */
-#if BALANDUINO_REVISION < 13
-  #define leftEncoder1Pin 15 // Used for attachInterrupt
-  #define leftEncoder2Pin 30 // Used for pin change interrupt
-  #define rightEncoder1Pin 16 // Used for attachInterrupt
-  #define rightEncoder2Pin 31 // Used for pin change interrupt
-#else
-  #define leftEncoder1Pin 25 // Used for pin change interrupt
-  #define leftEncoder2Pin 26 // Used for pin change interrupt
-  #define rightEncoder1Pin 30 // Used for pin change interrupt
-  #define rightEncoder2Pin 31 // Used for pin change interrupt
-#endif
-
-#define MAKE_PIN(pin) _MAKE_PIN(pin) // Puts a P in front of the pin number, e.g. 1 becomes P1
-#define _MAKE_PIN(pin) P ## pin
-
-#define leftEncoder1 MAKE_PIN(leftEncoder1Pin)
-#define leftEncoder2 MAKE_PIN(leftEncoder2Pin)
-
-#define rightEncoder1 MAKE_PIN(rightEncoder1Pin)
-#define rightEncoder2 MAKE_PIN(rightEncoder2Pin)
-
-// You should change these to match your pins
-#if BALANDUINO_REVISION < 13
-  #define PIN_CHANGE_INTERRUPT_VECTOR_LEFT PCINT0_vect
-  #define PIN_CHANGE_INTERRUPT_VECTOR_RIGHT PCINT0_vect
-#else
-  #define PIN_CHANGE_INTERRUPT_VECTOR_LEFT PCINT1_vect
-  #define PIN_CHANGE_INTERRUPT_VECTOR_RIGHT PCINT0_vect
-#endif
-
-// Encoder values
-#if defined(PIN_CHANGE_INTERRUPT_VECTOR_LEFT) && defined(PIN_CHANGE_INTERRUPT_VECTOR_RIGHT)
-  constexpr uint16_t zoneA = 8000 * 2;
-  constexpr uint16_t zoneB = 4000 * 2;
-  constexpr uint16_t zoneC = 1000 * 2;
-  constexpr float positionScaleA = 600.0f * 2.0f; // One resolution is 1856 pulses per encoder
-  constexpr float positionScaleB = 800.0f * 2.0f;
-  constexpr float positionScaleC = 1000.0f * 2.0f;
-  constexpr float positionScaleD = 500.0f * 2.0f;
-  constexpr float velocityScaleMove = 70.0f * 2.0f;
-  constexpr float velocityScaleStop = 60.0f * 2.0f;
-  constexpr float velocityScaleTurning = 70.0f * 2.0f;
-#else
-  constexpr uint16_t zoneA = 8000;
-  constexpr uint16_t zoneB = 4000;
-  constexpr uint16_t zoneC = 1000;
-  constexpr float positionScaleA = 600.0f; // One resolution is 928 pulses per encoder
-  constexpr float positionScaleB = 800.0f;
-  constexpr float positionScaleC = 1000.0f;
-  constexpr float positionScaleD = 500.0f;
-  constexpr float velocityScaleMove = 70.0f;
-  constexpr float velocityScaleStop = 60.0f;
-  constexpr float velocityScaleTurning = 70.0f;
-#endif
 
 
 #endif

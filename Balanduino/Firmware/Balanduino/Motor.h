@@ -2,44 +2,69 @@
 #define _motor_h_
 
 #include <stdint.h> // Needed for uint8_t, uint16_t etc.
-#include <Usb.h>
+#include <kalman.h>
 
-#include "Bluetooth.h"
+enum Command {
+  stop,
+  forward,
+  backward,
+  left,
+  right,
+  imu,
+  joystick,
+};
 
-// These pins macros are defined in avrpins.h in the USB Host library. This allows to read and write directly to the port registers instead of using Arduino's slow digitalRead()/digitalWrite() functions
-// The source is available here: https://github.com/felis/USB_Host_Shield_2.0/blob/master/avrpins.h
-// I do this to save processing power - see this page for more information: http://www.billporter.info/ready-set-oscillate-the-fastest-way-to-change-arduino-pins/
-// Also see the Arduino port manipulation guide: http://www.arduino.cc/en/Reference/PortManipulation
+// This struct will store all the configuration values
+typedef struct {
+  float P, I, D; // PID variables
+  float targetAngle; // Resting angle of the robot
+  uint8_t backToSpot; // Set whenever the robot should stay in the same spot
+  uint8_t controlAngleLimit; // Set the maximum tilting angle of the robot
+  uint8_t turningLimit; // Set the maximum turning value
+  float Qangle, Qbias, Rmeasure; // Kalman filter values
+  float accYzero, accZzero; // Accelerometer zero values
+  float leftMotorScaler, rightMotorScaler;
+} cfg_t;
 
-/* Left motor */
-#define leftA P23
-#define leftB P24
-#define leftPWM P18
+class Motor {
+private:
+  float iTerm;
 
-/* Right motor */
-#if BALANDUINO_REVISION < 13
-  #define rightA P25
-  #define rightB P26
-#else
-  #define rightA P15
-  #define rightB P16
-#endif
-#define rightPWM P17
+  bool calibrateGyro();
+  bool checkMinMax(int16_t *array, uint8_t length, int16_t maxDifference);
+public:
+  Command lastCommand;
+  cfg_t cfg;
+  Kalman kalman;
 
-/* Pins connected to the motor drivers diagnostic pins */
-#define leftDiag P21
-#define rightDiag P22
+  void updatePID(float restAngle, float offset, float turning, float dt);
+  void moveMotor(Command motor, Command direction, float speedRaw);
+  void stopMotor(Command motor);
+  void setPWM(Command motor, uint16_t dutyCycle);
+  void stopAndReset();
+  void leftEncoder();
+  void rightEncoder();
+  int32_t readLeftEncoder();
+  int32_t readRightEncoder();
+  int32_t getWheelsPosition();
+  
+  void setupEncoders();
+  void setupMotors();
+  void setupIMU();
+  void setupTiming();
+  void checkmotors();
+  void calibrateAndReset();
+
+  void setupBuzzer();
+  void setBuzzer();
+  void clearBuzzer();
+  void soundBuzzer(int delay);
+}
 
 
-void updatePID(float restAngle, float offset, float turning, float dt);
-void moveMotor(Command motor, Command direction, float speedRaw);
-void stopMotor(Command motor);
-void setPWM(Command motor, uint16_t dutyCycle);
-void stopAndReset();
-void leftEncoder();
-void rightEncoder();
-int32_t readLeftEncoder();
-int32_t readRightEncoder();
-int32_t getWheelsPosition();
+
+
+
+
 
 #endif
