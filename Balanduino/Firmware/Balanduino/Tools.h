@@ -3,6 +3,8 @@
 
 #include <stdint.h> // Needed for uint8_t, uint16_t etc.
 
+//extern bool sendIMUValues, sendSettings, sendInfo, sendStatusReport, sendPIDValues, sendPairConfirmation, sendKalmanValues; // Used to send out different values via Bluetooth
+
 void checkSerialData();
 void printMenu();
 void calibrateMotor();

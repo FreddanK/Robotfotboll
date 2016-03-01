@@ -19,6 +19,10 @@
 #include "Balanduino.h"
 #include "EEPROMAnything.h"
 
+/* EEPROM Address Definitions */
+constexpr uint8_t initFlagsAddr = 0; // Set the first byte to the EEPROM version
+constexpr uint8_t configAddr = 1; // Save the configuration starting from this location
+
 cfg_t cfg; //  Struct for all the configuration values
 
 bool checkInitializationFlags() {

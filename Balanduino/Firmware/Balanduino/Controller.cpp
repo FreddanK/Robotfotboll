@@ -1,39 +1,24 @@
-#include "controller.h"
+#include "Controller.h"
 
 #include <Arduino.h>
 
-#include "Balanduino.h"
-#include "Bluetooth.h"
 #include "Motor.h"
 
-//Set ENABLE_AI and disable ENABLE_SPP and ENABLE_ADK in Balanduino.ino to make this work
 
 //Makes the Balanduino to go forward for 3sek, stop, turn 90deg,go forward for 3sek and stop
-void setControlOffset(){
+void setControlOffset(Motor *motor){
   int time_since_start = millis();
-  steerStop = false;
   if(time_since_start>2000 && time_since_start<5000){
-    targetOffset = scale(10, 0, 36, 0, cfg.controlAngleLimit);
-    turningOffset = scale(0, 0, 45, 0, cfg.turningLimit);
-    targetPosition = getWheelsPosition();
-    stopped = false;
+    motor->steer(forward, 10);
   }
   else if(time_since_start>6000 && time_since_start<8000){
-    targetOffset = scale(0, 0, 36, 0, cfg.controlAngleLimit);
-    turningOffset = scale(17, 0, 45, 0, cfg.turningLimit);
+    motor->steer(left, 10);
   }
   else if(time_since_start>9000 && time_since_start<12000){
-    targetOffset = scale(10, 0, 36, 0, cfg.controlAngleLimit);
-    turningOffset = scale(0, 0, 45, 0, cfg.turningLimit);
-    targetPosition = getWheelsPosition();
-    stopped = false;
+    motor->steer(forward, 10);
   }
   else {
-    targetOffset = 0;
-    turningOffset = 0;
-    targetPosition = getWheelsPosition();
-    stopped = true;
-    steerStop = true;
+    motor->steer(stop);
   }
 }
 

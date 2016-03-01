@@ -16,17 +16,13 @@
 */
 #include "Bluetooth.h"
 
-#include "Balanduino.h"
 #include "Motor.h"
 #include "Tools.h"
 
-Command lastCommand;
-
-#if defined(ENABLE_USB)
 
 
-#ifdef ENABLE_SPP
-void readSPPData() {
+
+void Bluetooth::readSPPData() {
   if (SerialBT.connected) { // The SPP connection won't return data as fast as the controllers, so we will handle it separately
     if (SerialBT.available()) {
       uint8_t i = 0;
@@ -44,10 +40,9 @@ void readSPPData() {
     }
   }
 }
-#endif // ENABLE_SPP
 
-void readUsb() {
-#ifdef ENABLE_USB
+
+void Bluetooth::readUsb() {
   Usb.Task(); // The SPP data is actually not send until this is called, one could call SerialBT.send() directly as well
 
   if (Usb.getUsbTaskState() == USB_STATE_ERROR && layingDown) { // Check if the USB state machine is in an error state, but also make sure the robot is laying down
@@ -57,11 +52,8 @@ void readUsb() {
     Usb.vbusPower(vbus_on);
     Usb.setUsbTaskState(USB_DETACHED_SUBSTATE_WAIT_FOR_DEVICE); // Reset state machine
   }
-#endif // ENABLE_USB
 
-#ifdef ENABLE_SPP
   readSPPData();
-#endif // ENABLE_SPP
 
   if (millis() > (receiveControlTimer + receiveControlTimeout)) {
     commandSent = false; // We use this to detect when there has already been sent a command by one of the controllers
@@ -71,58 +63,10 @@ void readUsb() {
   }
 }
 
-
-#endif // defined(ENABLE_USB)
-
-
-void steer(Command command) {
-  commandSent = true; // Used to see if there has already been send a command or not
-
-  steerStop = false;
-  targetOffset = turningOffset = 0; // Set both to 0
-
-#if defined(ENABLE_SPP) || defined(ENABLE_TOOLS)
-  if (command == joystick) {
-    if (sppData2 > 0) // Forward
-      targetOffset = scale(sppData2, 0, 1, 0, cfg.controlAngleLimit);
-    else if (sppData2 < 0) // Backward
-      targetOffset = -scale(sppData2, 0, -1, 0, cfg.controlAngleLimit);
-    if (sppData1 > 0) // Right
-      turningOffset = scale(sppData1, 0, 1, 0, cfg.turningLimit);
-    else if (sppData1 < 0) // Left
-      turningOffset = -scale(sppData1, 0, -1, 0, cfg.turningLimit);
-  } else if (command == imu) {
-    if (sppData1 > 0) // Forward
-      targetOffset = scale(sppData1, 0, 36, 0, cfg.controlAngleLimit);
-    else if (sppData1 < 0) // Backward
-      targetOffset = -scale(sppData1, 0, -36, 0, cfg.controlAngleLimit);
-    if (sppData2 > 0) // Right
-      turningOffset = scale(sppData2, 0, 45, 0, cfg.turningLimit);
-    else if (sppData2 < 0) // Left
-      turningOffset = -scale(sppData2, 0, -45, 0, cfg.turningLimit);
-  }
-#endif // ENABLE_SPP or ENABLE_TOOLS
-
-  if (command == stop) {
-    steerStop = true;
-    if (lastCommand != stop) { // Set new stop position
-      targetPosition = getWheelsPosition();
-      stopped = false;
-    }
-  }
-  lastCommand = command;
+int Bluetooth::USBInit() {
+  return USB.init();
 }
 
-float scale(float input, float inputMin, float inputMax, float outputMin, float outputMax) { // Like map() just returns a float
-  float output;
-  if (inputMin < inputMax)
-    output = (input - inputMin) / ((inputMax - inputMin) / (outputMax - outputMin));
-  else
-    output = (inputMin - input) / ((inputMin - inputMax) / (outputMax - outputMin));
-  if (output > outputMax)
-    output = outputMax;
-  else if (output < outputMin)
-    output = outputMin;
-  return output;
-}
+
+
 

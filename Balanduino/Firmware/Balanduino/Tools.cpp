@@ -23,6 +23,11 @@
 #include "EEPROM.h"
 #include "Motor.h"
 
+#define VBAT A5 // Not broken out - used for battery voltage measurement
+
+bool sendIMUValues, sendSettings, sendInfo, sendStatusReport, sendPIDValues, sendPairConfirmation, sendKalmanValues; // Used to send out different values via Bluetooth
+
+float batteryVoltage; // Measured battery level
 
 #ifdef ENABLE_TOOLS
 

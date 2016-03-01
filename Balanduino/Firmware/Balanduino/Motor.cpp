@@ -23,12 +23,16 @@
 #include "Balanduino.h"
 #include "I2C.h"
 
+
 // Buzzer used for feedback, it can be disconnected using the jumper
 #if BALANDUINO_REVISION < 13
   #define buzzer P5
 #else
   #define buzzer P11 /* A4 */
 #endif
+
+#define LED MAKE_PIN(LED_BUILTIN) // LED_BUILTIN is defined in pins_arduino.h in the hardware add-on
+
 
 /* Left motor */
 #define leftA P23
@@ -483,6 +487,55 @@ void Motor::soundBuzzer(int msDelay){
   buzzer::Set();
   delay(msDelay);
   buzzer::Clear();
+}
+
+void Motor::steer(Command command) {
+  commandSent = true; // Used to see if there has already been send a command or not
+
+  steerStop = false;
+  targetOffset = turningOffset = 0; // Set both to 0
+
+  if (command == joystick) {
+    if (sppData2 > 0) // Forward
+      targetOffset = scale(sppData2, 0, 1, 0, cfg.controlAngleLimit);
+    else if (sppData2 < 0) // Backward
+      targetOffset = -scale(sppData2, 0, -1, 0, cfg.controlAngleLimit);
+    if (sppData1 > 0) // Right
+      turningOffset = scale(sppData1, 0, 1, 0, cfg.turningLimit);
+    else if (sppData1 < 0) // Left
+      turningOffset = -scale(sppData1, 0, -1, 0, cfg.turningLimit);
+  } else if (command == imu) {
+    if (sppData1 > 0) // Forward
+      targetOffset = scale(sppData1, 0, 36, 0, cfg.controlAngleLimit);
+    else if (sppData1 < 0) // Backward
+      targetOffset = -scale(sppData1, 0, -36, 0, cfg.controlAngleLimit);
+    if (sppData2 > 0) // Right
+      turningOffset = scale(sppData2, 0, 45, 0, cfg.turningLimit);
+    else if (sppData2 < 0) // Left
+      turningOffset = -scale(sppData2, 0, -45, 0, cfg.turningLimit);
+  }
+
+  if (command == stop) {
+    steerStop = true;
+    if (lastCommand != stop) { // Set new stop position
+      targetPosition = getWheelsPosition();
+      stopped = false;
+    }
+  }
+  lastCommand = command;
+}
+
+float Motor::scale(float input, float inputMin, float inputMax, float outputMin, float outputMax) { // Like map() just returns a float
+  float output;
+  if (inputMin < inputMax)
+    output = (input - inputMin) / ((inputMax - inputMin) / (outputMax - outputMin));
+  else
+    output = (inputMin - input) / ((inputMin - inputMax) / (outputMax - outputMin));
+  if (output > outputMax)
+    output = outputMax;
+  else if (output < outputMin)
+    output = outputMin;
+  return output;
 }
 
 /*Private functions*/
