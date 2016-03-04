@@ -32,8 +32,8 @@ private:
   volatile int32_t leftCounter;
   volatile int32_t rightCounter;
   
-  constexpr uint16_t PWM_FREQUENCY = 20000; // The motor driver can handle a PWM frequency up to 20kHz
-  constexpr uint16_t PWMVALUE = F_CPU / PWM_FREQUENCY / 2; // The frequency is given by F_CPU/(2*N*ICR) - where N is the prescaler, prescaling is used so the frequency is given by F_CPU/(2*ICR) - ICR = F_CPU/PWM_FREQUENCY/2
+  static const uint16_t PWM_FREQUENCY = 20000; // The motor driver can handle a PWM frequency up to 20kHz
+  static const uint16_t PWMVALUE = F_CPU / PWM_FREQUENCY / 2; // The frequency is given by F_CPU/(2*N*ICR) - where N is the prescaler, prescaling is used so the frequency is given by F_CPU/(2*ICR) - ICR = F_CPU/PWM_FREQUENCY/2
 
   float lastRestAngle; // Used to limit the new restAngle if it's much larger than the previous one
 
@@ -88,7 +88,7 @@ public:
   int32_t readRightEncoder();
   int32_t getWheelsPosition();
 
-  void checkmotors();
+  void checkMotors();
   void calculatePitch();
   void driveMotors();
   void updateEncoders();
@@ -106,7 +106,7 @@ public:
 
   void steer(Command command);
   float scale(float input, float inputMin, float inputMax, float outputMin, float outputMax);
-}
+};
 
 
 

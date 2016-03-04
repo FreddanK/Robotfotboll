@@ -25,7 +25,7 @@
 
 #include "Controller.h"
 #include "Bluetooth.h"
-#include "EEPROM.h"
+#include "Eeprom.h"
 #include "Motor.h"
 #include "Tools.h"
 
@@ -38,8 +38,10 @@
 
 uint8_t batteryCounter; // Counter used to check if it should check the battery level
 
-Motor motor;
-Bluetooth bluetooth;
+Bluetooth2 bluetooth{};
+Motor motor{};
+Eeprom eeprom{&motor};
+
 
 void setup() {
 
@@ -56,8 +58,8 @@ void setup() {
   }
   
   /* Read the PID values, target angle and other saved values in the EEPROM */
-  if (!checkInitializationFlags()) {
-    readEEPROMValues(); // Only read the EEPROM values if they have not been restored
+  if (!eeprom.checkInitializationFlags()) {
+    eeprom.readEEPROMValues(); // Only read the EEPROM values if they have not been restored
   } else { // Indicate that the EEPROM values have been reset by turning on the buzzer
     motor.soundBuzzer(1000);
     delay(100); // Wait a little after the pin is cleared
@@ -70,7 +72,7 @@ void setup() {
   motor.setupIMU();
 
 
-  tools.printMenu();
+  //tools.printMenu();
   
   motor.calibrateAndReset();
   
@@ -96,29 +98,22 @@ void loop() {
   batteryCounter++;
   if (batteryCounter >= 10) { // Measure battery every 1s
     batteryCounter = 0;
-    batteryVoltage = (float)analogRead(VBAT) / 63.050847458f; // VBAT is connected to analog input 5 which is not broken out. This is then connected to a 47k-12k voltage divider - 1023.0/(3.3/(12.0/(12.0+47.0))) = 63.050847458
-    if (batteryVoltage < 11.1 && batteryVoltage > 5) // Equal to 3.7V per cell - don't turn on if it's below 5V, this means that no battery is connected
-      motor.setBuzzer();
-    else
-      motor.clearBuzzer();
+    //batteryVoltage = (float)analogRead(VBAT) / 63.050847458f; // VBAT is connected to analog input 5 which is not broken out. This is then connected to a 47k-12k voltage divider - 1023.0/(3.3/(12.0/(12.0+47.0))) = 63.050847458
+    //if (batteryVoltage < 11.1 && batteryVoltage > 5) // Equal to 3.7V per cell - don't turn on if it's below 5V, this means that no battery is connected
+      //motor.setBuzzer();
+    //else
+      //motor.clearBuzzer();
   }
 }
 
   /* Read the Bluetooth dongle and send PID and IMU values */
-  tools.checkSerialData();
+  //tools.checkSerialData();
 
   bluetooth.readUsb();
 
-  tools.printValues();
+  //tools.printValues();
 
-#ifdef ENABLE_BTD
-  if (Btd.isReady()) {
-    timer = millis();
-    if ((Btd.watingForConnection && timer - blinkTimer > 1000) || (!Btd.watingForConnection && timer - blinkTimer > 100)) {
-      blinkTimer = timer;
-      LED::Toggle(); // Used to blink the built in LED, starts blinking faster upon an incoming Bluetooth request
-    }
-  } else
-    LED::Clear(); // This will turn it off
-#endif
+
+  bluetooth.blinkLed();
+
 }

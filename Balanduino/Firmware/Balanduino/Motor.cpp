@@ -128,6 +128,11 @@ ISR(PIN_CHANGE_INTERRUPT_VECTOR_RIGHT) {
 static const int8_t enc_states[16] = { 0, 0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, 0 }; // Encoder lookup table if it only interrupts on every second edge - this only works on revision 1.2 and older
 #endif
 
+
+/*Definitions of static variables*/
+uint16_t Motor::PWM_FREQUENCY = 20000; // The motor driver can handle a PWM frequency up to 20kHz
+uint16_t Motor::PWMVALUE = F_CPU / PWM_FREQUENCY / 2; // The frequency is given by F_CPU/(2*N*ICR) - where N is the prescaler, prescaling is used so the frequency is given by F_CPU/(2*ICR) - ICR = F_CPU/PWM_FREQUENCY/2
+
 void Motor::updatePID(float restAngle, float offset, float turning, float dt) {
   /* Brake */
   if (steerStop) {

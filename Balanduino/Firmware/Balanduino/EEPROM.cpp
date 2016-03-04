@@ -14,18 +14,18 @@
  Web      :  http://www.tkjelectronics.com
  e-mail   :  kristianl@tkjelectronics.com
 */
-#include "EEPROM.h"
+#include "Eeprom.h"
 
-#include "Balanduino.h"
 #include "EEPROMAnything.h"
 
+char* Eeprom::version = "1.1.0";
+uint8_t Eeprom::eepromVersion = 3; // EEPROM version - used to restore the EEPROM values if the configuration struct have changed
+
 /* EEPROM Address Definitions */
-constexpr uint8_t initFlagsAddr = 0; // Set the first byte to the EEPROM version
-constexpr uint8_t configAddr = 1; // Save the configuration starting from this location
+uint8_t Eeprom::initFlagsAddr = 0; // Set the first byte to the EEPROM version
+uint8_t Eeprom::configAddr = 1; // Save the configuration starting from this location
 
-cfg_t cfg; //  Struct for all the configuration values
-
-bool checkInitializationFlags() {
+bool Eeprom::checkInitializationFlags() {
   uint8_t initFlag;
   EEPROM_readAnything(initFlagsAddr, initFlag);
   if (initFlag != eepromVersion) { // Check if the EEPROM version matches the current one
@@ -36,38 +36,38 @@ bool checkInitializationFlags() {
   return false;
 }
 
-void readEEPROMValues() {
+void Eeprom::readEEPROMValues() {
   EEPROM_readAnything(configAddr, cfg);
 
-  kalman.setQangle(cfg.Qangle);
-  kalman.setQbias(cfg.Qbias);
-  kalman.setRmeasure(cfg.Rmeasure);
+  motor->kalman.setQangle(cfg.Qangle);
+  motor->kalman.setQbias(cfg.Qbias);
+  motor->kalman.setRmeasure(cfg.Rmeasure);
 }
 
-void updateConfig() {
+void Eeprom::updateConfig() {
   EEPROM_updateAnything(configAddr, cfg);
 
-  kalman.setQangle(cfg.Qangle);
-  kalman.setQbias(cfg.Qbias);
-  kalman.setRmeasure(cfg.Rmeasure);
+  motor->kalman.setQangle(cfg.Qangle);
+  motor->kalman.setQbias(cfg.Qbias);
+  motor->kalman.setRmeasure(cfg.Rmeasure);
 }
 
-void restoreEEPROMValues() {
-  cfg.P = 9.0f;
-  cfg.I = 2.0f;
-  cfg.D = 3.0f;
+void Eeprom::restoreEEPROMValues() {
+  motor->cfg.P = 9.0f;
+  motor->cfg.I = 2.0f;
+  motor->cfg.D = 3.0f;
 
-  cfg.targetAngle = 180.0f;
-  cfg.backToSpot = 1;
-  cfg.controlAngleLimit = 7;
-  cfg.turningLimit = 25;
+  motor->cfg.targetAngle = 180.0f;
+  motor->cfg.backToSpot = 1;
+  motor->cfg.controlAngleLimit = 7;
+  motor->cfg.turningLimit = 25;
 
-  cfg.Qangle = 0.001f;
-  cfg.Qbias = 0.003f;
-  cfg.Rmeasure = 0.03f;
+  motor->cfg.Qangle = 0.001f;
+  motor->cfg.Qbias = 0.003f;
+  motor->cfg.Rmeasure = 0.03f;
 
-  cfg.accYzero = cfg.accZzero = 0.0f;
-  cfg.leftMotorScaler = cfg.rightMotorScaler = 1.0f;
+  motor->cfg.accYzero = cfg.accZzero = 0.0f;
+  motor->cfg.leftMotorScaler = cfg.rightMotorScaler = 1.0f;
 
   updateConfig();
 }

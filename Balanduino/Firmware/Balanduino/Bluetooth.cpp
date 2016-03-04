@@ -20,9 +20,11 @@
 #include "Tools.h"
 
 
+#define LED MAKE_PIN(LED_BUILTIN) // LED_BUILTIN is defined in pins_arduino.h in the hardware add-on
 
+uint16_t Bluetooth2::receiveControlTimeout = 500;
 
-void Bluetooth::readSPPData() {
+void Bluetooth2::readSPPData() {
   if (SerialBT.connected) { // The SPP connection won't return data as fast as the controllers, so we will handle it separately
     if (SerialBT.available()) {
       uint8_t i = 0;
@@ -42,7 +44,7 @@ void Bluetooth::readSPPData() {
 }
 
 
-void Bluetooth::readUsb() {
+void Bluetooth2::readUsb() {
   Usb.Task(); // The SPP data is actually not send until this is called, one could call SerialBT.send() directly as well
 
   if (Usb.getUsbTaskState() == USB_STATE_ERROR && layingDown) { // Check if the USB state machine is in an error state, but also make sure the robot is laying down
@@ -63,8 +65,20 @@ void Bluetooth::readUsb() {
   }
 }
 
-int Bluetooth::USBInit() {
+int Bluetooth2::USBInit() {
   return USB.init();
+}
+
+void Bluetooth2::blinkLed() {
+  if (Btd.isReady()) {
+    timer = millis();
+    if ((Btd.watingForConnection && timer - blinkTimer > 1000) || (!Btd.watingForConnection && timer - blinkTimer > 100)) {
+      blinkTimer = timer;
+      LED::Toggle(); // Used to blink the built in LED, starts blinking faster upon an incoming Bluetooth request
+    }
+  } 
+  else
+    LED::Clear(); // This will turn it off
 }
 
 
