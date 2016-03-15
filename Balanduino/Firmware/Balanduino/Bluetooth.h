@@ -6,8 +6,10 @@
 #include <adk.h>
 #include <usbhub.h> // Some dongles can have a hub inside
 
+class Motor; //Forward declaration of Motor
 
-class Bluetooth2 {
+class Bluetooth {
+  Motor * motor;
 public:
   USB Usb; // This will take care of all USB communication
   ADK adk{&Usb, "TKJ Electronics", // Manufacturer Name
@@ -19,6 +21,8 @@ public:
   USBHub Hub{&Usb}; // Some dongles have a hub inside
   BTD Btd{&Usb}; // This is the main Bluetooth library, it will take care of all the USB and HCI communication with the Bluetooth dongle
   SPP SerialBT{&Btd, "Balanduino", "0000"}; // The SPP (Serial Port Protocol) emulates a virtual Serial port, which is supported by most computers and mobile phones
+
+  Bluetooth(Motor * m) { motor = m; }
 
   char dataInput[30]; // Incoming data buffer
   bool bluetoothData; // True if data received is from the Bluetooth connection

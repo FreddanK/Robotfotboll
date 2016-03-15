@@ -20,7 +20,6 @@
 #include <Wire.h>
 #include <Usb.h>
 
-#include "Balanduino.h"
 #include "I2C.h"
 
 
@@ -109,29 +108,34 @@
   constexpr float velocityScaleTurning = 70.0f;
 #endif
 
+
 /* Interrupt routine and encoder read functions */
 // It uses gray code to detect if any pulses are missed. See: https://www.circuitsathome.com/mcu/reading-rotary-encoder-on-arduino and http://en.wikipedia.org/wiki/Rotary_encoder#Incremental_rotary_encoder.
 
 #if defined(PIN_CHANGE_INTERRUPT_VECTOR_LEFT) && defined(PIN_CHANGE_INTERRUPT_VECTOR_RIGHT)
-static const int8_t enc_states[16] = { 0, -1, 1, 0, 1, 0, 0, -1, -1, 0, 0, 1, 0, 1, -1, 0 }; // Encoder lookup table if it interrupts on every edge
+const int8_t enc_states[16] = { 0, -1, 1, 0, 1, 0, 0, -1, -1, 0, 0, 1, 0, 1, -1, 0 }; // Encoder lookup table if it interrupts on every edge
+#elif BALANDUINO_REVISION < 13
+#warning "Only interrupting on every second edge!"
+const int8_t enc_states[16] = { 0, 0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, 0 }; // Encoder lookup table if it only interrupts on every second edge - this only works on revision 1.2 and older
+#endif
 
 ISR(PIN_CHANGE_INTERRUPT_VECTOR_LEFT) {
-  leftEncoder();
+  Motor::leftEncoder();
 #if BALANDUINO_REVISION >= 13
 }
 ISR(PIN_CHANGE_INTERRUPT_VECTOR_RIGHT) {
 #endif
-  rightEncoder();
+  Motor::rightEncoder();
 }
-#elif BALANDUINO_REVISION < 13
-#warning "Only interrupting on every second edge!"
-static const int8_t enc_states[16] = { 0, 0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, 0 }; // Encoder lookup table if it only interrupts on every second edge - this only works on revision 1.2 and older
-#endif
 
+volatile int32_t leftCounter = 0;
+volatile int32_t rightCounter = 0;
 
 /*Definitions of static variables*/
-uint16_t Motor::PWM_FREQUENCY = 20000; // The motor driver can handle a PWM frequency up to 20kHz
-uint16_t Motor::PWMVALUE = F_CPU / PWM_FREQUENCY / 2; // The frequency is given by F_CPU/(2*N*ICR) - where N is the prescaler, prescaling is used so the frequency is given by F_CPU/(2*ICR) - ICR = F_CPU/PWM_FREQUENCY/2
+const uint16_t Motor::PWM_FREQUENCY = 20000; // The motor driver can handle a PWM frequency up to 20kHz
+const uint16_t Motor::PWMVALUE = F_CPU / PWM_FREQUENCY / 2; // The frequency is given by F_CPU/(2*N*ICR) - where N is the prescaler, prescaling is used so the frequency is given by F_CPU/(2*ICR) - ICR = F_CPU/PWM_FREQUENCY/2
+
+
 
 void Motor::updatePID(float restAngle, float offset, float turning, float dt) {
   /* Brake */
@@ -324,7 +328,7 @@ void Motor::calculatePitch(){
 
 void Motor::driveMotors(){
   /* Drive motors */
-  timer = micros();
+  uint32_t timer = micros();
   // If the robot is laying down, it has to be put in a vertical position before it starts balancing
   // If it's already balancing it has to be ±45 degrees before it stops trying to balance
   if ((layingDown && (pitch < cfg.targetAngle - 10 || pitch > cfg.targetAngle + 10)) || (!layingDown && (pitch < cfg.targetAngle - 45 || pitch > cfg.targetAngle + 45))) {
@@ -339,7 +343,7 @@ void Motor::driveMotors(){
 
 void Motor::updateEncoders(){
   /* Update encoders */
-  timer = millis();
+  uint32_t timer = millis();
   if (timer - encoderTimer >= 100) { // Update encoder values every 100ms
     encoderTimer = timer;
     int32_t wheelPosition = getWheelsPosition();
@@ -350,6 +354,7 @@ void Motor::updateEncoders(){
       targetPosition = wheelPosition;
       stopped = true;
     }
+  }
 }
 
 void Motor::setupEncoders(){
@@ -573,4 +578,3 @@ bool Motor::checkMinMax(int16_t *array, uint8_t length, int16_t maxDifference) {
   }
   return max - min < maxDifference;
 }
-

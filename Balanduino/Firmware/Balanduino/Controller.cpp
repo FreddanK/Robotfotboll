@@ -3,7 +3,7 @@
 #include <Arduino.h>
 
 #include "Motor.h"
-
+/*
 
 //Makes the Balanduino to go forward for 3sek, stop, turn 90deg,go forward for 3sek and stop
 void setControlOffset(Motor *motor){
@@ -21,4 +21,4 @@ void setControlOffset(Motor *motor){
     motor->steer(stop);
   }
 }
-
+*/

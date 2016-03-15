@@ -20,11 +20,13 @@
 #include "Tools.h"
 
 
+#define MAKE_PIN(pin) _MAKE_PIN(pin) // Puts a P in front of the pin number, e.g. 1 becomes P1
+#define _MAKE_PIN(pin) P ## pin
 #define LED MAKE_PIN(LED_BUILTIN) // LED_BUILTIN is defined in pins_arduino.h in the hardware add-on
 
-uint16_t Bluetooth2::receiveControlTimeout = 500;
+const uint16_t Bluetooth::receiveControlTimeout = 500;
 
-void Bluetooth2::readSPPData() {
+void Bluetooth::readSPPData() {
   if (SerialBT.connected) { // The SPP connection won't return data as fast as the controllers, so we will handle it separately
     if (SerialBT.available()) {
       uint8_t i = 0;
@@ -44,10 +46,10 @@ void Bluetooth2::readSPPData() {
 }
 
 
-void Bluetooth2::readUsb() {
+void Bluetooth::readUsb() {
   Usb.Task(); // The SPP data is actually not send until this is called, one could call SerialBT.send() directly as well
 
-  if (Usb.getUsbTaskState() == USB_STATE_ERROR && layingDown) { // Check if the USB state machine is in an error state, but also make sure the robot is laying down
+  if (Usb.getUsbTaskState() == USB_STATE_ERROR && motor->layingDown) { // Check if the USB state machine is in an error state, but also make sure the robot is laying down
     Serial.println(F("USB fail"));
     Usb.vbusPower(vbus_off);
     delay(1000);
@@ -58,22 +60,22 @@ void Bluetooth2::readUsb() {
   readSPPData();
 
   if (millis() > (receiveControlTimer + receiveControlTimeout)) {
-    commandSent = false; // We use this to detect when there has already been sent a command by one of the controllers
+    motor->commandSent = false; // We use this to detect when there has already been sent a command by one of the controllers
 
-    if (!commandSent) // If there hasn't been send a command by now, then send stop
-      steer(stop);
+    if (!motor->commandSent) // If there hasn't been send a command by now, then send stop
+      motor->steer(stop);
   }
 }
 
-int Bluetooth2::USBInit() {
-  return USB.init();
+int Bluetooth::USBInit() {
+  return Usb.Init();
 }
 
-void Bluetooth2::blinkLed() {
+void Bluetooth::blinkLed() {
   if (Btd.isReady()) {
-    timer = millis();
-    if ((Btd.watingForConnection && timer - blinkTimer > 1000) || (!Btd.watingForConnection && timer - blinkTimer > 100)) {
-      blinkTimer = timer;
+    uint32_t timer = millis();
+    if ((Btd.watingForConnection && timer - motor->blinkTimer > 1000) || (!Btd.watingForConnection && timer - motor->blinkTimer > 100)) {
+      motor->blinkTimer = timer;
       LED::Toggle(); // Used to blink the built in LED, starts blinking faster upon an incoming Bluetooth request
     }
   } 

@@ -23,7 +23,7 @@
 */
 #include <Arduino.h>
 
-#include "Controller.h"
+//#include "Controller.h"
 #include "Bluetooth.h"
 #include "Eeprom.h"
 #include "Motor.h"
@@ -38,8 +38,9 @@
 
 uint8_t batteryCounter; // Counter used to check if it should check the battery level
 
-Bluetooth2 bluetooth{};
+
 Motor motor{};
+Bluetooth bluetooth{&motor};
 Eeprom eeprom{&motor};
 
 
@@ -86,7 +87,7 @@ void loop() {
 
   motor.checkMotors();
 
-  setControlOffset();
+  //setControlOffset();
 
   //Serial.print(accAngle);Serial.print('\t');Serial.print(gyroAngle);Serial.print('\t');Serial.println(pitch);
   motor.calculatePitch();
@@ -104,7 +105,6 @@ void loop() {
     //else
       //motor.clearBuzzer();
   }
-}
 
   /* Read the Bluetooth dongle and send PID and IMU values */
   //tools.checkSerialData();

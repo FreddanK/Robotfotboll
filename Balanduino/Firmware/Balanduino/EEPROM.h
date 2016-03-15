@@ -17,7 +17,7 @@ public:
   static const char *version;
   static const uint8_t eepromVersion; // EEPROM version - used to restore the EEPROM values if the configuration struct have changed
   
-  Eeprom(Motor * m) { motor=m; }
+  Eeprom(Motor * m) { motor = m; }
   
   bool checkInitializationFlags();
   void readEEPROMValues();
