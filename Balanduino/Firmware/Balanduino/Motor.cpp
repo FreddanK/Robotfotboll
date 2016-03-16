@@ -113,10 +113,10 @@
 // It uses gray code to detect if any pulses are missed. See: https://www.circuitsathome.com/mcu/reading-rotary-encoder-on-arduino and http://en.wikipedia.org/wiki/Rotary_encoder#Incremental_rotary_encoder.
 
 #if defined(PIN_CHANGE_INTERRUPT_VECTOR_LEFT) && defined(PIN_CHANGE_INTERRUPT_VECTOR_RIGHT)
-const int8_t enc_states[16] = { 0, -1, 1, 0, 1, 0, 0, -1, -1, 0, 0, 1, 0, 1, -1, 0 }; // Encoder lookup table if it interrupts on every edge
+const int8_t Motor::enc_states[16] = { 0, -1, 1, 0, 1, 0, 0, -1, -1, 0, 0, 1, 0, 1, -1, 0 }; // Encoder lookup table if it interrupts on every edge
 #elif BALANDUINO_REVISION < 13
 #warning "Only interrupting on every second edge!"
-const int8_t enc_states[16] = { 0, 0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, 0 }; // Encoder lookup table if it only interrupts on every second edge - this only works on revision 1.2 and older
+const int8_t Motor::enc_states[16] = { 0, 0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, 0 }; // Encoder lookup table if it only interrupts on every second edge - this only works on revision 1.2 and older
 #endif
 
 ISR(PIN_CHANGE_INTERRUPT_VECTOR_LEFT) {
@@ -128,8 +128,8 @@ ISR(PIN_CHANGE_INTERRUPT_VECTOR_RIGHT) {
   Motor::rightEncoder();
 }
 
-volatile int32_t leftCounter = 0;
-volatile int32_t rightCounter = 0;
+volatile int32_t Motor::leftCounter = 0;
+volatile int32_t Motor::rightCounter = 0;
 
 /*Definitions of static variables*/
 const uint16_t Motor::PWM_FREQUENCY = 20000; // The motor driver can handle a PWM frequency up to 20kHz
@@ -500,29 +500,32 @@ void Motor::soundBuzzer(int msDelay){
 }
 
 void Motor::steer(Command command) {
+  steer(command, 0, 0);
+}
+void Motor::steer(Command command, float amountTurn, float amountForward) {
   commandSent = true; // Used to see if there has already been send a command or not
 
   steerStop = false;
   targetOffset = turningOffset = 0; // Set both to 0
 
   if (command == joystick) {
-    if (sppData2 > 0) // Forward
-      targetOffset = scale(sppData2, 0, 1, 0, cfg.controlAngleLimit);
-    else if (sppData2 < 0) // Backward
-      targetOffset = -scale(sppData2, 0, -1, 0, cfg.controlAngleLimit);
-    if (sppData1 > 0) // Right
-      turningOffset = scale(sppData1, 0, 1, 0, cfg.turningLimit);
-    else if (sppData1 < 0) // Left
-      turningOffset = -scale(sppData1, 0, -1, 0, cfg.turningLimit);
-  } else if (command == imu) {
-    if (sppData1 > 0) // Forward
-      targetOffset = scale(sppData1, 0, 36, 0, cfg.controlAngleLimit);
-    else if (sppData1 < 0) // Backward
-      targetOffset = -scale(sppData1, 0, -36, 0, cfg.controlAngleLimit);
-    if (sppData2 > 0) // Right
-      turningOffset = scale(sppData2, 0, 45, 0, cfg.turningLimit);
-    else if (sppData2 < 0) // Left
-      turningOffset = -scale(sppData2, 0, -45, 0, cfg.turningLimit);
+    if (amountForward > 0) // Forward
+      targetOffset = scale(amountForward, 0, 1, 0, cfg.controlAngleLimit);
+    else if (amountForward < 0) // Backward
+      targetOffset = -scale(amountForward, 0, -1, 0, cfg.controlAngleLimit);
+    if (amountTurn > 0) // Right
+      turningOffset = scale(amountTurn, 0, 1, 0, cfg.turningLimit);
+    else if (amountTurn < 0) // Left
+      turningOffset = -scale(amountTurn, 0, -1, 0, cfg.turningLimit);
+  } else if (command == imu) { //amountForward is turningOffset and amountTurn is targetOffset here
+    if (amountTurn > 0) // Forward
+      targetOffset = scale(amountTurn, 0, 36, 0, cfg.controlAngleLimit);
+    else if (amountTurn < 0) // Backward
+      targetOffset = -scale(amountTurn, 0, -36, 0, cfg.controlAngleLimit);
+    if (amountForward > 0) // Right
+      turningOffset = scale(amountForward, 0, 45, 0, cfg.turningLimit);
+    else if (amountForward < 0) // Left
+      turningOffset = -scale(amountForward, 0, -45, 0, cfg.turningLimit);
   }
 
   if (command == stop) {

@@ -23,40 +23,44 @@
 */
 #include <Arduino.h>
 
-//#include "Controller.h"
-#include "Bluetooth.h"
-#include "Eeprom.h"
 #include "Motor.h"
-#include "Tools.h"
+#include "Eeprom.h"
+#include "Controller.h"
 
 
+//#include "Tools.h"
+//#include "Bluetooth.h"
 
 #if ARDUINO < 156 // Make sure that at least Arduino IDE version 1.5.6 is used
   #error "Please update the Arduino IDE to version 1.5.6 or newer at the following website: http://arduino.cc/en/Main/Software"
 #endif
 
 
-uint8_t batteryCounter; // Counter used to check if it should check the battery level
+//uint8_t batteryCounter; // Counter used to check if it should check the battery level
 
 
 Motor motor{};
-Bluetooth bluetooth{&motor};
 Eeprom eeprom{&motor};
+Controller controller{};
 
+//Tools tools{};
+//Bluetooth bluetooth{&motor, &tools};
 
 void setup() {
 
   /* Initialize UART */
-  Serial.begin(115200);
+  //Serial.begin(115200);
 
   /* Setup buzzer pin */
   motor.initBuzzer();
 
+  /*
   if(bluetooth.USBInit() == -1) {
     Serial.print(F("OSC did not start"));
     motor.setBuzzer();
     while (1); // Halt
   }
+  */
   
   /* Read the PID values, target angle and other saved values in the EEPROM */
   if (!eeprom.checkInitializationFlags()) {
@@ -87,15 +91,16 @@ void loop() {
 
   motor.checkMotors();
 
-  //setControlOffset();
+  controller.setControlOffset(&motor);
 
-  //Serial.print(accAngle);Serial.print('\t');Serial.print(gyroAngle);Serial.print('\t');Serial.println(pitch);
+  //Serial.print(motor.accAngle);Serial.print('\t');Serial.print(motor.gyroAngle);Serial.print('\t');Serial.println(motor.pitch);
   motor.calculatePitch();
 
   motor.driveMotors();
 
   motor.updateEncoders();
 
+  /*
   batteryCounter++;
   if (batteryCounter >= 10) { // Measure battery every 1s
     batteryCounter = 0;
@@ -105,15 +110,16 @@ void loop() {
     //else
       //motor.clearBuzzer();
   }
+  */
 
   /* Read the Bluetooth dongle and send PID and IMU values */
   //tools.checkSerialData();
 
-  bluetooth.readUsb();
+  //bluetooth.readUsb();
 
-  //tools.printValues();
+  //tools.printValues(); Is in bluetooth.cpp for now
 
 
-  bluetooth.blinkLed();
+  //bluetooth.blinkLed();
 
 }

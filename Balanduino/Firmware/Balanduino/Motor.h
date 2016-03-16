@@ -43,8 +43,6 @@ private:
   uint8_t i2cBuffer[8]; // Buffer for I2C data
 
 // Results
-  float accAngle, gyroAngle; // Result from raw accelerometer and gyroscope readings
-  float pitch; // Result from Kalman filter
   float lastError; // Store last angle error
   float iTerm; // Store iTerm
 
@@ -55,11 +53,8 @@ private:
   uint32_t encoderTimer; // Timer used used to determine when to update the encoder values
   uint32_t reportTimer; // This is used to set a delay between sending report values
 
-
   bool steerStop; // Stop by default
   bool stopped; // This is used to set a new target position after braking
-
-
 
   float targetOffset; // Offset for going forward and backward
   float turningOffset; // Offset for turning left and right
@@ -67,8 +62,6 @@ private:
   int32_t lastWheelPosition; // Used to calculate the wheel velocity
   int32_t wheelVelocity; // Wheel velocity based on encoder readings
   int32_t targetPosition; // The encoder position the robot should be at
-
-  
 
   bool calibrateGyro();
   bool checkMinMax(int16_t *array, uint8_t length, int16_t maxDifference);
@@ -83,12 +76,15 @@ public:
   uint32_t blinkTimer; // Used to blink the built in LED, starts blinking faster upon an incoming Bluetooth request
   bool commandSent; // This is used so multiple controller can be used at once
 
-  Motor();
+  float accAngle, gyroAngle; // Result from raw accelerometer and gyroscope readings
+  float pitch; // Result from Kalman filter
+
   void updatePID(float restAngle, float offset, float turning, float dt);
   void moveMotor(Command motor, Command direction, float speedRaw);
   void stopMotor(Command motor);
   void setPWM(Command motor, uint16_t dutyCycle);
   void stopAndReset();
+  
   static void leftEncoder();
   static void rightEncoder();
   int32_t readLeftEncoder();
@@ -112,10 +108,10 @@ public:
   void soundBuzzer(int delay);
 
   void steer(Command command);
+  void steer(Command command, float amount);
+  void steer(Command command, float amountTurn, float amountForward);
   float scale(float input, float inputMin, float inputMax, float outputMin, float outputMax);
 };
-
-
 
 
 #endif
