@@ -92,7 +92,7 @@
   constexpr float positionScaleB = 800.0f * 2.0f;
   constexpr float positionScaleC = 1000.0f * 2.0f;
   constexpr float positionScaleD = 500.0f * 2.0f;
-  constexpr float velocityScaleMove = 70.0f * 2.0f;
+  constexpr float velocityScaleMove = 70.0f * 5.0f;
   constexpr float velocityScaleStop = 60.0f * 2.0f;
   constexpr float velocityScaleTurning = 70.0f * 2.0f;
 #else
@@ -502,6 +502,15 @@ void Motor::soundBuzzer(int msDelay){
 void Motor::steer(Command command) {
   steer(command, 0, 0);
 }
+void Motor::steer(Command command, float amount) {
+  if(command == forward || command == backward)
+    steer(command, 0, amount);
+  else if(command == left || command == right)
+    steer(command, amount, 0);
+  else
+    steer(stop,0,0);
+    
+}
 void Motor::steer(Command command, float amountTurn, float amountForward) {
   commandSent = true; // Used to see if there has already been send a command or not
 
@@ -526,6 +535,20 @@ void Motor::steer(Command command, float amountTurn, float amountForward) {
       turningOffset = scale(amountForward, 0, 45, 0, cfg.turningLimit);
     else if (amountForward < 0) // Left
       turningOffset = -scale(amountForward, 0, -45, 0, cfg.turningLimit);
+  }
+  else if(command == forward){
+    targetOffset = scale(amountForward, 0, 50, 0, cfg.controlAngleLimit);
+  }
+  else if(command == backward){
+    targetOffset = -scale(amountForward, 0, 50, 0, cfg.controlAngleLimit);
+  }
+  else if(command == left){
+    turningOffset = scale(amountTurn, 0, 50, 0, cfg.turningLimit);
+    targetOffset = scale(amountForward, 0, 50, 0, cfg.controlAngleLimit);
+  }
+  else if(command == right){
+    turningOffset = -scale(amountTurn, 0, 50, 0, cfg.turningLimit);
+    targetOffset = scale(amountForward, 0, 50, 0, cfg.controlAngleLimit);
   }
 
   if (command == stop) {

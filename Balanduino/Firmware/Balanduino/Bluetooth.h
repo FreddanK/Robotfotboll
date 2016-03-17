@@ -1,7 +1,7 @@
 
 #ifndef _bluetooth_h_
 #define _bluetooth_h_
-/*
+
 #include <SPP.h>
 #include <adk.h>
 #include <usbhub.h> // Some dongles can have a hub inside
@@ -10,6 +10,7 @@ class Motor; //Forward declaration of Motor
 class Tools;
 
 class Bluetooth {
+private:
   Motor * motor;
   Tools * tools;
 public:
@@ -24,18 +25,16 @@ public:
   BTD Btd{&Usb}; // This is the main Bluetooth library, it will take care of all the USB and HCI communication with the Bluetooth dongle
   SPP SerialBT{&Btd, "Balanduino", "0000"}; // The SPP (Serial Port Protocol) emulates a virtual Serial port, which is supported by most computers and mobile phones
 
-  Bluetooth(Motor * m, Tools * t) { motor = m; tools = t; }
-
   static const uint16_t receiveControlTimeout; // After how long time should it should prioritize the other controllers instead of the serial control
+
+  Bluetooth(Motor * m, Tools * t) { motor = m; tools = t; }
+  void init();
   
   void readSPPData();
   void readUsb();
   int USBInit();
 
-  void printValues(); //originally in tools
-  void setValues(char *input); // originally in tools
-
   void blinkLed();
 };
-*/
+
 #endif

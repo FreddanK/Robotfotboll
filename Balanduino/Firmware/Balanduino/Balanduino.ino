@@ -27,40 +27,35 @@
 #include "Eeprom.h"
 #include "Controller.h"
 
-
-//#include "Tools.h"
-//#include "Bluetooth.h"
+#include "Tools.h"
+#include "Bluetooth.h"
 
 #if ARDUINO < 156 // Make sure that at least Arduino IDE version 1.5.6 is used
   #error "Please update the Arduino IDE to version 1.5.6 or newer at the following website: http://arduino.cc/en/Main/Software"
 #endif
 
 
-//uint8_t batteryCounter; // Counter used to check if it should check the battery level
-
-
 Motor motor{};
 Eeprom eeprom{&motor};
 Controller controller{};
 
-//Tools tools{};
-//Bluetooth bluetooth{&motor, &tools};
+Tools tools{&motor, &eeprom};
+Bluetooth bluetooth{&motor, &tools};
 
 void setup() {
 
   /* Initialize UART */
-  //Serial.begin(115200);
+  Serial.begin(115200);
 
   /* Setup buzzer pin */
   motor.initBuzzer();
 
-  /*
+  //bluetooth.init();
   if(bluetooth.USBInit() == -1) {
     Serial.print(F("OSC did not start"));
     motor.setBuzzer();
     while (1); // Halt
   }
-  */
   
   /* Read the PID values, target angle and other saved values in the EEPROM */
   if (!eeprom.checkInitializationFlags()) {
@@ -77,7 +72,7 @@ void setup() {
   motor.setupIMU();
 
 
-  //tools.printMenu();
+  tools.printMenu();
   
   motor.calibrateAndReset();
   
@@ -100,26 +95,15 @@ void loop() {
 
   motor.updateEncoders();
 
-  /*
-  batteryCounter++;
-  if (batteryCounter >= 10) { // Measure battery every 1s
-    batteryCounter = 0;
-    //batteryVoltage = (float)analogRead(VBAT) / 63.050847458f; // VBAT is connected to analog input 5 which is not broken out. This is then connected to a 47k-12k voltage divider - 1023.0/(3.3/(12.0/(12.0+47.0))) = 63.050847458
-    //if (batteryVoltage < 11.1 && batteryVoltage > 5) // Equal to 3.7V per cell - don't turn on if it's below 5V, this means that no battery is connected
-      //motor.setBuzzer();
-    //else
-      //motor.clearBuzzer();
-  }
-  */
-
+  tools.checkBatteryVoltage();
   /* Read the Bluetooth dongle and send PID and IMU values */
-  //tools.checkSerialData();
+  tools.checkSerialData();
 
-  //bluetooth.readUsb();
+  bluetooth.readUsb();
 
-  //tools.printValues(); Is in bluetooth.cpp for now
+  tools.printValues();
 
 
-  //bluetooth.blinkLed();
+  bluetooth.blinkLed();
 
 }

@@ -1,9 +1,17 @@
 #ifndef _tools_h_
 #define _tools_h_
-/*
+
 #include <stdint.h> // Needed for uint8_t, uint16_t etc.
 
+class Motor;
+class Eeprom;
+class Bluetooth;
+
 class Tools {
+private:
+  Motor * motor;
+  Eeprom * eeprom;
+  Bluetooth * bluetooth;
 public:
   bool sendIMUValues, sendSettings, sendInfo, sendStatusReport, sendPIDValues, sendPairConfirmation, sendKalmanValues; // Used to send out different values via Bluetooth
   float batteryVoltage; // Measured battery level
@@ -13,15 +21,22 @@ public:
   float sppData1, sppData2; // Data send via SPP connection
   uint32_t receiveControlTimer;
 
+  Tools(Motor * m, Eeprom * e) { motor = m; eeprom = e; }
+  void addBluetooth(Bluetooth * b) { bluetooth = b; }
   
   void checkSerialData();
   void printMenu();
   void calibrateMotor();
   void testMotorSpeed(float *leftSpeed, float *rightSpeed, float leftScaler, float rightScaler);
   void calibrateAcc();
+  
+  void printValues();
+  void setValues(char *input);
+
+  void checkBatteryVoltage();
 
 };
-*/
+
 
 
 #endif

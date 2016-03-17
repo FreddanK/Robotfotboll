@@ -40,18 +40,10 @@ private:
 
 /* IMU Data */
   float gyroXzero;
-  uint8_t i2cBuffer[8]; // Buffer for I2C data
 
 // Results
   float lastError; // Store last angle error
   float iTerm; // Store iTerm
-
-/* Used for timing */
-  uint32_t kalmanTimer; // Timer used for the Kalman filter
-  uint32_t pidTimer; // Timer used for the PID loop
-  uint32_t imuTimer; // This is used to set a delay between sending IMU values
-  uint32_t encoderTimer; // Timer used used to determine when to update the encoder values
-  uint32_t reportTimer; // This is used to set a delay between sending report values
 
   bool steerStop; // Stop by default
   bool stopped; // This is used to set a new target position after braking
@@ -63,8 +55,6 @@ private:
   int32_t wheelVelocity; // Wheel velocity based on encoder readings
   int32_t targetPosition; // The encoder position the robot should be at
 
-  bool calibrateGyro();
-  bool checkMinMax(int16_t *array, uint8_t length, int16_t maxDifference);
 public:
   Command lastCommand;
   cfg_t cfg;
@@ -76,8 +66,16 @@ public:
   uint32_t blinkTimer; // Used to blink the built in LED, starts blinking faster upon an incoming Bluetooth request
   bool commandSent; // This is used so multiple controller can be used at once
 
+  uint8_t i2cBuffer[8]; // Buffer for I2C data
   float accAngle, gyroAngle; // Result from raw accelerometer and gyroscope readings
   float pitch; // Result from Kalman filter
+
+  /* Used for timing */
+  uint32_t kalmanTimer; // Timer used for the Kalman filter
+  uint32_t pidTimer; // Timer used for the PID loop
+  uint32_t imuTimer; // This is used to set a delay between sending IMU values
+  uint32_t encoderTimer; // Timer used used to determine when to update the encoder values
+  uint32_t reportTimer; // This is used to set a delay between sending report values
 
   void updatePID(float restAngle, float offset, float turning, float dt);
   void moveMotor(Command motor, Command direction, float speedRaw);
@@ -111,6 +109,9 @@ public:
   void steer(Command command, float amount);
   void steer(Command command, float amountTurn, float amountForward);
   float scale(float input, float inputMin, float inputMax, float outputMin, float outputMax);
+
+  bool calibrateGyro();
+  bool checkMinMax(int16_t *array, uint8_t length, int16_t maxDifference);
 };
 
 
