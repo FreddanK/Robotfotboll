@@ -26,7 +26,7 @@ public:
 	void doTask();
 	void goToObject(int object, int signature);
 	void kickBall();
-	void avoidObject(int object);
+	void avoidObject();
 
 
 	//Test functions

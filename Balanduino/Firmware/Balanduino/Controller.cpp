@@ -10,12 +10,12 @@
 
 
 void Controller::doTask() {
-  blocksCount = pixy->getBlocks();
+  int blocksCount = pixy->getBlocks();
 
   if(task == search) {
     int i;
     for(i=0; i<blocksCount; i++) {
-      if pixy->blocks[i].signature == BALL) {
+      if(pixy->blocks[i].signature == BALL) {
         goToObject(i,BALL);
       }
       else if(pixy->blocks[i].signature == OPPONENT) {
@@ -42,7 +42,7 @@ void Controller::goToObject(int object, int signature) {
     motor->steer(left,20);
   }
   else if(width > 10 && width < 110){
-    motor->(forward,30);
+    motor->steer(forward,30);
   }
   else if(width > 110){
     if(signature == BALL){
@@ -60,7 +60,7 @@ void Controller::goToObject(int object, int signature) {
 
 void Controller::kickBall() {
   int time_since_start = millis() - taskTimer;
-  if (time_since_kickstart<500){
+  if (time_since_start<500){
     motor->steer(forward,50);
   }
   
@@ -74,9 +74,9 @@ void Controller::kickBall() {
   }
 }
 
-void Controller::avoidObject(int object) {
+void Controller::avoidObject() {
   int time_since_start = millis() - taskTimer;
-  if (time_since_kickstart<500){
+  if (time_since_start<500){
     motor->steer(right, 50);
     motor->steer(forward,10);
   }
