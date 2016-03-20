@@ -159,7 +159,7 @@ void Motor::updatePID(float restAngle, float offset, float turning, float dt) {
     }
     restAngle -= (float)wheelVelocity / velocityScaleStop;
 
-    restAngle = constrain(restAngle, cfg.targetAngle - 10, cfg.targetAngle + 10); // Limit rest Angle
+    //restAngle = constrain(restAngle, cfg.targetAngle - 10, cfg.targetAngle + 10); // Limit rest Angle
   }
   /* Drive forward and backward */
   else {

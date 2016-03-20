@@ -22,13 +22,14 @@
  For details, see: http://balanduino.net/
 */
 #include <Arduino.h>
+#include <Pixy.h>
 
 #include "Motor.h"
 #include "Eeprom.h"
 #include "Controller.h"
-
 #include "Tools.h"
 #include "Bluetooth.h"
+
 
 #if ARDUINO < 156 // Make sure that at least Arduino IDE version 1.5.6 is used
   #error "Please update the Arduino IDE to version 1.5.6 or newer at the following website: http://arduino.cc/en/Main/Software"
@@ -37,8 +38,8 @@
 
 Motor motor{};
 Eeprom eeprom{&motor};
-Controller controller{};
-
+Pixy pixy{};
+Controller controller{&motor, &pixy};
 Tools tools{&motor, &eeprom};
 Bluetooth bluetooth{&motor, &tools};
 
@@ -50,7 +51,7 @@ void setup() {
   /* Setup buzzer pin */
   motor.initBuzzer();
 
-  //bluetooth.init();
+  bluetooth.init();
   if(bluetooth.USBInit() == -1) {
     Serial.print(F("OSC did not start"));
     motor.setBuzzer();
@@ -73,6 +74,8 @@ void setup() {
 
 
   tools.printMenu();
+
+  pixy.init();
   
   motor.calibrateAndReset();
   
@@ -86,7 +89,7 @@ void loop() {
 
   motor.checkMotors();
 
-  controller.setControlOffset(&motor);
+  controller.findBall();
 
   //Serial.print(motor.accAngle);Serial.print('\t');Serial.print(motor.gyroAngle);Serial.print('\t');Serial.println(motor.pitch);
   motor.calculatePitch();
