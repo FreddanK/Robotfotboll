@@ -39,7 +39,7 @@
 Motor motor{};
 Eeprom eeprom{&motor};
 Pixy pixy{};
-Controller controller{&motor, &pixy};
+Controller controller{motor, pixy};
 Tools tools{&motor, &eeprom};
 Bluetooth bluetooth{&motor, &tools};
 
@@ -89,7 +89,7 @@ void loop() {
 
   motor.checkMotors();
 
-  controller.findBall();
+  controller.makeCircle();
 
   //Serial.print(motor.accAngle);Serial.print('\t');Serial.print(motor.gyroAngle);Serial.print('\t');Serial.println(motor.pitch);
   motor.calculatePitch();

@@ -542,11 +542,11 @@ void Motor::steer(Command command, float amountTurn, float amountForward) {
   else if(command == backward){
     targetOffset = -scale(amountForward, 0, 50, 0, cfg.controlAngleLimit);
   }
-  else if(command == left){
+  else if(command == right){
     turningOffset = scale(amountTurn, 0, 50, 0, cfg.turningLimit);
     targetOffset = scale(amountForward, 0, 50, 0, cfg.controlAngleLimit);
   }
-  else if(command == right){
+  else if(command == left){
     turningOffset = -scale(amountTurn, 0, 50, 0, cfg.turningLimit);
     targetOffset = scale(amountForward, 0, 50, 0, cfg.controlAngleLimit);
   }
