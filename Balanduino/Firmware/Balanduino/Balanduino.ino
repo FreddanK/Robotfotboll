@@ -89,7 +89,7 @@ void loop() {
 
   motor.checkMotors();
 
-  controller.makeCircle();
+  controller.findBall();
 
   //Serial.print(motor.accAngle);Serial.print('\t');Serial.print(motor.gyroAngle);Serial.print('\t');Serial.println(motor.pitch);
   motor.calculatePitch();

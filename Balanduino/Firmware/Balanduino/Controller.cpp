@@ -36,10 +36,10 @@ void Controller::goToObject(int object, int signature) {
   int width = pixy.blocks[object].width;
 
   if(xPos<120){
-    motor.steer(right,20);
+    motor.steer(left,20);
   }
   else if(xPos>200){
-    motor.steer(left,20);
+    motor.steer(right,20);
   }
   else if(width > 10 && width < 110){
     motor.steer(forward,30);
@@ -118,10 +118,10 @@ void Controller::findBall(){
   int xPos = pixy.blocks[0].x;
   
   if(xPos<140){
-    motor.steer(right,20);
+    motor.steer(left,20);
   }
   else if(xPos>170){
-    motor.steer(left,20);
+    motor.steer(right,20);
   }
   else if(width>80 && width < 180){
     motor.steer(backward,20);
