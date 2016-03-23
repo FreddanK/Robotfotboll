@@ -45,17 +45,19 @@ private:
   float lastError; // Store last angle error
   float iTerm; // Store iTerm
 
-  bool steerStop; // Stop by default
-  bool stopped; // This is used to set a new target position after braking
 
-  float targetOffset; // Offset for going forward and backward
-  float turningOffset; // Offset for turning left and right
 
   int32_t lastWheelPosition; // Used to calculate the wheel velocity
   int32_t wheelVelocity; // Wheel velocity based on encoder readings
   int32_t targetPosition; // The encoder position the robot should be at
 
 public:
+
+  bool steerStop; // Stop by default
+  bool stopped; // This is used to set a new target position after braking
+  float targetOffset; // Offset for going forward and backward
+  float turningOffset; // Offset for turning left and right
+  
   Command lastCommand;
   cfg_t cfg;
   Kalman kalman;

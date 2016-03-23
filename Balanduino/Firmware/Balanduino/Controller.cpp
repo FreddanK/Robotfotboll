@@ -10,16 +10,24 @@
 
 
 void Controller::doTask() {
-  int blocksCount = pixy.getBlocks();
-
+  uint16_t blocksCount = pixy.getBlocks();
+  uint16_t updateTimer = millis()-pixyTimer;
+  if (blocksCount>0)
+    pixyTimer = millis();
+  
   if(task == search) {
-    int i;
-    for(i=0; i<blocksCount; i++) {
-      if(pixy.blocks[i].signature == BALL) {
-        goToObject(i,BALL);
+    if(blocksCount || updateTimer<100) {
+      goToObject(0,BALL);
+    }
+    else {
+      uint16_t xPos = pixy.blocks[0].x;
+      uint16_t width = pixy.blocks[0].width;
+    
+      if(xPos<120){
+        motor.steer(left,20);
       }
-      else if(pixy.blocks[i].signature == OPPONENT) {
-        goToObject(i,OPPONENT);
+      else if(xPos>200){
+        motor.steer(right,20);
       }
     }
   }
@@ -29,29 +37,32 @@ void Controller::doTask() {
   else if(task == avoid) {
     avoidObject();
   }
+  else {
+    motor.steer(stop);
+  }
 }
 
 void Controller::goToObject(int object, int signature) {
-  int xPos = pixy.blocks[object].x;
-  int width = pixy.blocks[object].width;
+  uint16_t xPos = pixy.blocks[object].x;
+  uint16_t width = pixy.blocks[object].width;
 
   if(xPos<120){
     motor.steer(left,20);
+    motor.steer(forward,5);
   }
   else if(xPos>200){
     motor.steer(right,20);
+    motor.steer(forward,5);
   }
   else if(width > 10 && width < 110){
-    motor.steer(forward,30);
+    motor.steer(forward,20);
   }
-  else if(width > 110){
+  else if(width >= 110){
     if(signature == BALL){
-      motor.steer(stop);
       task = kick;
       taskTimer = millis();
     }
     else if(signature == OPPONENT){
-      motor.steer(stop);
       task=avoid;
       taskTimer = millis();
     }
@@ -59,13 +70,12 @@ void Controller::goToObject(int object, int signature) {
 }
 
 void Controller::kickBall() {
-  int time_since_start = millis() - taskTimer;
+  uint32_t time_since_start = millis() - taskTimer;
   if (time_since_start<500){
     motor.steer(forward,50);
-  }
-  
-  else if(time_since_start>500 && time_since_start<2000){
-    motor.steer(stop);
+  }  
+  else if(time_since_start>500 && time_since_start<2500){
+    motor.steer(forward,0);
   }  
   else{
     motor.steer(stop);
@@ -111,23 +121,27 @@ void Controller::moveBacknForth(){
 }
 
 void Controller::findBall(){
-  uint16_t blocksCount;
-  blocksCount = pixy.getBlocks();
+  uint16_t blocksCount = pixy.getBlocks();
   
   int width = pixy.blocks[0].width;
   int xPos = pixy.blocks[0].x;
   
-  if(xPos<140){
+  if(xPos<120){
     motor.steer(left,20);
+    motor.steer(forward,0);
+    //motor.steerStop = true;
+    //motor.turningOffset = -12;
   }
-  else if(xPos>170){
+  else if(xPos>200){
     motor.steer(right,20);
+    motor.steer(forward,0);
   }
-  else if(width>80 && width < 180){
-    motor.steer(backward,20);
+  else if(width>=110){
+    task=kick;
+    taskTimer = millis();
   }
-  else if(width < 80 && width > 20){
-    motor.steer(forward,20);
+  else if(width > 10 && width < 110){
+    motor.steer(forward,20); 
   }
   else {
     motor.steer(stop);
@@ -147,7 +161,8 @@ void Controller::rotate360() {
 void Controller::makeCircle() {
   unsigned long time_since_start = millis();
   if(time_since_start>2000 && time_since_start<10000){
-    motor.steer(right,30,20); 
+    motor.steer(right,30);
+    motor.steer(forward,20); 
   }
   else if(time_since_start>10000){
     motor.steer(stop);

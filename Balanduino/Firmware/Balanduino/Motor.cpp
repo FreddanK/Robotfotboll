@@ -159,7 +159,7 @@ void Motor::updatePID(float restAngle, float offset, float turning, float dt) {
     }
     restAngle -= (float)wheelVelocity / velocityScaleStop;
 
-    //restAngle = constrain(restAngle, cfg.targetAngle - 10, cfg.targetAngle + 10); // Limit rest Angle
+    restAngle = constrain(restAngle, cfg.targetAngle - 10, cfg.targetAngle + 10); // Limit rest Angle
   }
   /* Drive forward and backward */
   else {
@@ -503,12 +503,25 @@ void Motor::steer(Command command) {
   steer(command, 0, 0);
 }
 void Motor::steer(Command command, float amount) {
-  if(command == forward || command == backward)
-    steer(command, 0, amount);
-  else if(command == left || command == right)
-    steer(command, amount, 0);
-  else
+  if(command == forward){
+    steerStop = false;
+    targetOffset = scale(amount, 0, 50, 0, cfg.controlAngleLimit);
+  }
+  else if(command == backward){
+    steerStop = false;
+    targetOffset = -scale(amount, 0, 50, 0, cfg.controlAngleLimit);
+  }
+  else if(command == right){
+    steerStop = true;
+    turningOffset = scale(amount, 0, 50, 0, cfg.turningLimit);
+  }
+  else if(command == left){
+    steerStop = true;
+    turningOffset = -scale(amount, 0, 50, 0, cfg.turningLimit);
+  }
+  else {
     steer(stop,0,0);
+  }
     
 }
 void Motor::steer(Command command, float amountTurn, float amountForward) {
@@ -535,20 +548,6 @@ void Motor::steer(Command command, float amountTurn, float amountForward) {
       turningOffset = scale(amountForward, 0, 45, 0, cfg.turningLimit);
     else if (amountForward < 0) // Left
       turningOffset = -scale(amountForward, 0, -45, 0, cfg.turningLimit);
-  }
-  else if(command == forward){
-    targetOffset = scale(amountForward, 0, 50, 0, cfg.controlAngleLimit);
-  }
-  else if(command == backward){
-    targetOffset = -scale(amountForward, 0, 50, 0, cfg.controlAngleLimit);
-  }
-  else if(command == right){
-    turningOffset = scale(amountTurn, 0, 50, 0, cfg.turningLimit);
-    targetOffset = scale(amountForward, 0, 50, 0, cfg.controlAngleLimit);
-  }
-  else if(command == left){
-    turningOffset = -scale(amountTurn, 0, 50, 0, cfg.turningLimit);
-    targetOffset = scale(amountForward, 0, 50, 0, cfg.controlAngleLimit);
   }
 
   if (command == stop) {

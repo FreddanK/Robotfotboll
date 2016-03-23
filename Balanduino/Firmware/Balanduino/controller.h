@@ -2,6 +2,7 @@
 #define _controller_h_
 
 #include <Pixy.h>
+#include <stdint.h>
 
 #include "Motor.h";
 
@@ -18,8 +19,10 @@ private:
 	Motor& motor;
 	Pixy& pixy;
 
+  uint16_t blocksCount = 0;
 	Task task = search;
-	unsigned long taskTimer = 0;
+	uint32_t taskTimer = 0;
+  uint32_t pixyTimer = 0;
 public:
 	Controller(Motor& m, Pixy& p) : motor(m), pixy(p) {}
 
