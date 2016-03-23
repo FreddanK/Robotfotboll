@@ -16,13 +16,16 @@ void Controller::doTask() {
     pixyTimer = millis();
   
   if(task == search) {
-    if(blocksCount || updateTimer<100) {
+    if(blocksCount || updateTimer<25) {
       goToObject(0,BALL);
+    }
+    else if(updateTimer>=25 && updateTimer < 1500) {
+      motor.steer(stop);
     }
     else {
       uint16_t xPos = pixy.blocks[0].x;
       uint16_t width = pixy.blocks[0].width;
-    
+
       if(xPos<120){
         motor.steer(left,20);
       }
@@ -74,7 +77,7 @@ void Controller::kickBall() {
   if (time_since_start<500){
     motor.steer(forward,50);
   }  
-  else if(time_since_start>500 && time_since_start<2500){
+  else if(time_since_start>500 && time_since_start<2000){
     motor.steer(forward,0);
   }  
   else{
