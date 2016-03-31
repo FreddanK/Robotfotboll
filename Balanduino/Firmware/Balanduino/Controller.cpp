@@ -11,18 +11,31 @@
 
 void Controller::doTask() {
   uint16_t blocksCount = pixy.getBlocks();
+  
+  //Get the time since pixy last saw an object
   uint16_t updateTimer = millis()-pixyTimer;
+  //if pixy sees an object the timer needs to be reset
   if (blocksCount>0)
     pixyTimer = millis();
   
   if(task == search) {
+    //Pixys update frequency is 50Hz = 20ms
+    //Assume pixy sees something if blocksCount > 0
+    //or if it was less than 25ms since it last saw an object.
+    //(It needs to be a little higher than 20ms, otherwise there is
+    //a chance of missing an object.)
     if(blocksCount || updateTimer<25) {
       goToObject(0,BALL);
     }
+    //This delay is to make the robot stop properly.
+    //Without it the robot is very unstable when an object suddently
+    //goes out of sight.
     else if(updateTimer>=25 && updateTimer < 1500) {
       motor.steer(stop);
     }
     else {
+      //Search for objects in the direction where the last
+      //seen object went out of sight.
       uint16_t xPos = pixy.blocks[0].x;
       uint16_t width = pixy.blocks[0].width;
 
