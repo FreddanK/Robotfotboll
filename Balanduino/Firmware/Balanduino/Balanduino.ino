@@ -29,6 +29,7 @@
 #include "Controller.h"
 #include "Tools.h"
 #include "Bluetooth.h"
+#include "Microphone.h"
 
 
 #if ARDUINO < 156 // Make sure that at least Arduino IDE version 1.5.6 is used
@@ -42,6 +43,7 @@ Pixy pixy{};
 Controller controller{motor, pixy};
 Tools tools{&motor, &eeprom};
 Bluetooth bluetooth{&motor, &tools};
+Microphone microphone{};
 
 void setup() {
 
@@ -89,7 +91,11 @@ void loop() {
 
   motor.checkMotors();
 
-  controller.doTask();
+  microphone.readMic();
+  if(microphone.robotOn)
+    controller.doTask();
+  else
+    motor.steer(stop);
 
   //Serial.print(motor.accAngle);Serial.print('\t');Serial.print(motor.gyroAngle);Serial.print('\t');Serial.println(motor.pitch);
   motor.calculatePitch();
