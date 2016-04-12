@@ -13,7 +13,7 @@ void Controller::doTask() {
   uint16_t blocksCount = pixy.getBlocks();
   
   //Get the time since pixy last saw an object
-  uint16_t updateTimer = millis()-pixyTimer;
+  uint32_t updateTimer = millis()-pixyTimer;
   //if pixy sees an object the timer needs to be reset
   if (blocksCount>0)
     pixyTimer = millis();
