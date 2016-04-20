@@ -192,8 +192,23 @@ void Motor::updatePID(float restAngle, float offset, float turning, float dt) {
       turning = 0;
   }
 
-  float PIDLeft = PIDValue + turning;
-  float PIDRight = PIDValue - turning;
+  if (radius > 0){
+    radiusLeftScaler = (radius - 10) / radius;
+    radiusRightScaler = (radius + 10) / radius;
+  }
+  else if (radius < 0){
+    radiusLeftScaler = (radius + 10) / radius;
+    radiusRightScaler = (radius - 10) / radius;
+  }
+  else if (radius == 0){
+    radiusLeftScaler = 1;
+    radiusRightScaler = 1;
+
+  float PIDLeft = PIDValue * radiusLeftScaler  + turning;
+  float PIDRight = PIDValue * radiusRightScaler - turning;
+
+  //float PIDLeft = PIDValue + turning;
+  //float PIDRight = PIDValue - turning;
 
   PIDLeft *= cfg.leftMotorScaler; // Compensate for difference in some of the motors
   PIDRight *= cfg.rightMotorScaler;

@@ -23,6 +23,10 @@ private:
 	Task task = search;
 	uint32_t taskTimer = 0;
   uint32_t pixyTimer = 0;
+
+  int32_t startLeftvalue = 0;
+  int32_t startRightvalue = 0;
+  int32_t startValue = 0;
 public:
 	Controller(Motor& m, Pixy& p) : motor(m), pixy(p) {}
 
@@ -30,6 +34,7 @@ public:
 	void goToObject(int object, int signature);
 	void kickBall();
 	void avoidObject();
+  void encoderMove(float distance , float speeed);
 
 	//Test functions
 	void moveBacknForth();

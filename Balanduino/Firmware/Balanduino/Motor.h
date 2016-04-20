@@ -52,6 +52,9 @@ private:
   int32_t targetPosition; // The encoder position the robot should be at
 
 public:
+  float radius = 0;
+  float radiusLeftScaler;
+  float radiusRigthScaler;
 
   bool steerStop; // Stop by default
   bool stopped; // This is used to set a new target position after braking

@@ -118,6 +118,25 @@ void Controller::avoidObject() {
   }
 }
 
+void Controller::encoderMove(float distance , float speed){
+  float Omkrets = 30.9211; //hjulets omkrets i cm
+  int32_t p = 1856; //antal pulser per varv (928 för ett hjul)
+  int32_t rightwheel= motor.readRightEncoder() + startLeftvalue;
+  int32_t leftwheel = motor.readLeftEncoder() + startRightvalue;
+  float position = startValue + motor.getWheelsPosition();
+  position = position*Omkrets/(p*2);
+  float leftpos = leftwheel*Omkrets/p;
+  float rightpos = rightwheel*Omkrets/p;
+ 
+  
+  if (position < 100 && position > -distance){
+    motor.steer(forward,30);
+  }
+  
+  else if(position<-distance){
+    motor.steer(stop);
+  }
+}
 
 void Controller::moveBacknForth(){
   unsigned long time_since_start = millis();
