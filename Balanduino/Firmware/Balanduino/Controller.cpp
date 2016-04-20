@@ -89,7 +89,7 @@ void Controller::kickBall() {
   uint32_t time_since_start = millis() - taskTimer;
   if (time_since_start<500){
     motor.steer(forward,50);
-  }  
+  }
   else if(time_since_start>500 && time_since_start<2000){
     motor.steer(forward,0);
   }  
@@ -118,24 +118,77 @@ void Controller::avoidObject() {
   }
 }
 
-void Controller::encoderMove(float distance , float speed){
-  float Omkrets = 30.9211; //hjulets omkrets i cm
-  int32_t p = 1856; //antal pulser per varv (928 för ett hjul)
-  int32_t rightwheel= motor.readRightEncoder() + startLeftvalue;
-  int32_t leftwheel = motor.readLeftEncoder() + startRightvalue;
+void Controller::setupEncoderMove(float d, float r, float s) {
+  startValue = motor.getWheelsPosition();
+  targetDistance = d;
+  radius = r;
+  speed = s;
+}
+
+void Controller::setupEncoderSpin(float degrees, float s) {
+  startLeftvalue = motor.readRightEncoder();
+  startRightvalue = motor.readLeftEncoder();
+  targetTurningDistance = (degrees/360)*2*3.141592654*10; //The distance between the wheels on the robot is 20cm, so the radius is 20/2 = 10cm
+  rate = s;
+}
+
+void Controller::encoderMove(){
+  float circumference = 30.9211; //the wheel's circumference in cm
+  int32_t pulses = 1856; //number of pulses per revolation (928 for each wheel)
+  
   float position = startValue + motor.getWheelsPosition();
-  position = position*Omkrets/(p*2);
-  float leftpos = leftwheel*Omkrets/p;
-  float rightpos = rightwheel*Omkrets/p;
- 
-  
-  if (position < 100 && position > -distance){
-    motor.steer(forward,30);
+  float distance = -position*circumference/(pulses*2); //position is negative when driving forward and positive when driving backwards
+
+  if (targetDistance > 0) { //Drive forwards
+    if (distance < targetDistance-speed){
+      motor.steer(stop);   //This is only to make sure turningOffset is 0
+      motor.steer(forward,speed);
+      motor.turningRadius = radius;
+    }
+    else if(distance >= targetDistance-speed){
+      motor.steer(stop);
+    }
   }
+  else if(targetDistance < 0) { //Drive backwards
+    if (distance > targetDistance+speed){
+      motor.steer(stop);   //This is only to make sure turningOffset is 0
+      motor.steer(backward,speed);
+      motor.turningRadius = radius;
+    }
+    else if(distance <= targetDistance+speed){
+      motor.steer(stop);
+    }
+  }
+}
+
+void Controller::encoderSpin() {
+  float circumference = 30.9211; //the wheel's circumference in cm
+  int32_t pulses = 1856; //number of pulses per revolation (928 for each wheel)
   
-  else if(position<-distance){
+  int32_t rightwheelpos = motor.readRightEncoder() + startLeftvalue;
+  int32_t leftwheelpos = motor.readLeftEncoder() + startRightvalue;
+  
+  float leftdistance = -leftwheelpos*circumference/pulses; //the position is negative when driving forwards and positive when driving backwards
+  float rightdistance = -rightwheelpos*circumference/pulses;
+
+  if(targetTurningDistance > 0) { //spin right
+    if(rightdistance < targetTurningDistance){
+      motor.steer(right,rate);
+    }
+    else if(rightdistance >= targetTurningDistance) {
+      motor.steer(stop);
+    }
+  }
+  else if(targetTurningDistance < 0) { //spin left
+    if(rightdistance > targetTurningDistance) {
+      motor.steer(left,rate);
+    }
+    else if (rightdistance <= targetTurningDistance) {
+      motor.steer(stop);
+    }
+  }
+  else
     motor.steer(stop);
-  }
 }
 
 void Controller::moveBacknForth(){

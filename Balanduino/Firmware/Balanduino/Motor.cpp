@@ -192,17 +192,18 @@ void Motor::updatePID(float restAngle, float offset, float turning, float dt) {
       turning = 0;
   }
 
-  if (radius > 0){
-    radiusLeftScaler = (radius - 10) / radius;
-    radiusRightScaler = (radius + 10) / radius;
+  if (turningRadius > 0){
+    radiusLeftScaler = (turningRadius - 10) / turningRadius;
+    radiusRightScaler = (turningRadius + 10) / turningRadius;
   }
-  else if (radius < 0){
-    radiusLeftScaler = (radius + 10) / radius;
-    radiusRightScaler = (radius - 10) / radius;
+  else if (turningRadius < 0){
+    radiusLeftScaler = (turningRadius + 10) / turningRadius;
+    radiusRightScaler = (turningRadius - 10) / turningRadius;
   }
-  else if (radius == 0){
+  else if (turningRadius == 0){
     radiusLeftScaler = 1;
     radiusRightScaler = 1;
+  }
 
   float PIDLeft = PIDValue * radiusLeftScaler  + turning;
   float PIDRight = PIDValue * radiusRightScaler - turning;
@@ -518,6 +519,7 @@ void Motor::steer(Command command) {
   steer(command, 0, 0);
 }
 void Motor::steer(Command command, float amount) {
+
   if(command == forward){
     steerStop = false;
     targetOffset = scale(amount, 0, 50, 0, cfg.controlAngleLimit);

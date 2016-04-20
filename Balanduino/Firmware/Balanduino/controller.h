@@ -27,6 +27,13 @@ private:
   int32_t startLeftvalue = 0;
   int32_t startRightvalue = 0;
   int32_t startValue = 0;
+
+  float targetDistance = 0;
+  float radius = 0;
+  float speed = 0;
+  float targetTurningDistance = 0;
+  float rate = 0;
+
 public:
 	Controller(Motor& m, Pixy& p) : motor(m), pixy(p) {}
 
@@ -34,7 +41,10 @@ public:
 	void goToObject(int object, int signature);
 	void kickBall();
 	void avoidObject();
-  void encoderMove(float distance , float speeed);
+  void setupEncoderMove(float d, float r, float s);
+  void setupEncoderSpin(float degrees, float s);
+  void encoderMove();
+  void encoderSpin();
 
 	//Test functions
 	void moveBacknForth();

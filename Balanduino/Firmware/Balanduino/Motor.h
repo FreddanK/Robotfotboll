@@ -51,10 +51,12 @@ private:
   int32_t wheelVelocity; // Wheel velocity based on encoder readings
   int32_t targetPosition; // The encoder position the robot should be at
 
+  float radiusLeftScaler = 0;
+  float radiusRightScaler = 0;
+  
 public:
-  float radius = 0;
-  float radiusLeftScaler;
-  float radiusRigthScaler;
+  float turningRadius = 0;
+  
 
   bool steerStop; // Stop by default
   bool stopped; // This is used to set a new target position after braking
