@@ -56,6 +56,8 @@ public:
   void checkSurroundings();
   void checkIfBallSeen();
 
+  float distancePixelsToCm(int object_size_pixels, float real_size_cm, bool measure_height);
+
 	//Test functions
 	void moveBacknForth();
 	void findBall();

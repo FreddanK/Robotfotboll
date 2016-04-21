@@ -244,6 +244,19 @@ void Controller::checkSurroundings(){
   }
 }
 
+float Controller::distancePixelsToCm(int object_size_pixels, float real_size_cm, bool measure_height) {
+  float focal_length_cm = 0.28;
+  float image_width_pixels = 320;
+  float image_height_pixels = 200;
+  float sensor_width_cm = 0.3888;
+  float sensor_height_cm = 0.243;
+  if(measure_height)
+    return (focal_length_cm*real_size_cm*image_height_pixels)/(object_size_pixels*sensor_height_cm);
+  else
+    return (focal_length_cm*real_size_cm*image_width_pixels)/(object_size_pixels*sensor_width_cm);
+  
+}
+
 void Controller::moveBacknForth(){
   unsigned long time_since_start = millis();
   if(time_since_start>3000 && time_since_start<5000){
