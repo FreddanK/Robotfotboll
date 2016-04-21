@@ -20,6 +20,7 @@ private:
 	Pixy& pixy;
 
   uint16_t blocksCount = 0;
+  uint16_t actualBlocks;
 	Task task = search;
 	uint32_t taskTimer = 0;
   uint32_t pixyTimer = 0;
@@ -34,6 +35,10 @@ private:
   float targetTurningDistance = 0;
   float rate = 0;
 
+  uint32_t ballVar;
+  uint32_t opponentVar;
+  boolean ballVisible;
+
 public:
 	Controller(Motor& m, Pixy& p) : motor(m), pixy(p) {}
 
@@ -41,10 +46,15 @@ public:
 	void goToObject(int object, int signature);
 	void kickBall();
 	void avoidObject();
+
   void setupEncoderMove(float d, float r, float s);
   void setupEncoderSpin(float degrees, float s);
   void encoderMove();
   void encoderSpin();
+
+  void getSigVariables();
+  void checkSurroundings();
+  void checkIfBallSeen();
 
 	//Test functions
 	void moveBacknForth();

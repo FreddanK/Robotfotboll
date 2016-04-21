@@ -15,9 +15,10 @@ void Controller::doTask() {
   //Get the time since pixy last saw an object
   uint32_t updateTimer = millis()-pixyTimer;
   //if pixy sees an object the timer needs to be reset
-  if (blocksCount>0)
+  if (blocksCount>0){
     pixyTimer = millis();
-  
+    actualBlocks = blocksCount;
+  }
   if(task == search) {
     //Pixys update frequency is 50Hz = 20ms
     //Assume pixy sees something if blocksCount > 0
@@ -79,8 +80,7 @@ void Controller::goToObject(int object, int signature) {
       taskTimer = millis();
     }
     else if(signature == OPPONENT){
-      task=avoid;
-      taskTimer = millis();
+      avoidObject();
     }
   }
 }
@@ -96,25 +96,39 @@ void Controller::kickBall() {
   else{
     motor.steer(stop);
     task=search;
-    taskTimer = millis(); //unnecessary right now, bur may be useful later
+    taskTimer = millis(); //unnecessary right now, but may be useful later
   }
 }
 
+//avoids an object by turning away from it 
+//and towards the direction of the ball if the ball is visible
 void Controller::avoidObject() {
-  int time_since_start = millis() - taskTimer;
-  if (time_since_start<500){
-    motor.steer(right, 50);
-    motor.steer(forward,10);
+  //gets the x-Position for the opponent to avoid and the ball
+  //by first checking their signatures position integer for the blocks array
+  getSigVariables();
+  uint16_t xPosBall = pixy.blocks[ballVar].x;
+  uint16_t xPosObject = pixy.blocks[opponentVar].x;
+  checkIfBallSeen();
+  if(ballVisible){
+    //if the ball is to the left of the object turn left
+    if(xPosBall<xPosObject){
+      motor.steer(left,20);
+    }
+    //otherwise the ball is to the right of the object, then turn right
+    else{
+      motor.steer(right,20);
+    }
   }
-  
-  else if(time_since_start>500 && time_since_start<2000){
-    motor.steer(left,20);
-    motor.steer(forward,30);
-  }
+  //If ball isn't visible
   else{
-    motor.steer(stop);
-    task=search;
-    taskTimer = millis(); //unnecessary right now, bur may be useful later
+    //turn right if the object to avoid is to the left
+    //and left if the object to avoid is to the right
+    if(xPosObject<160){
+      motor.steer(right,20);
+    }
+    else if(xPosObject>160){
+      motor.steer(left,20);
+    }
   }
 }
 
@@ -189,6 +203,45 @@ void Controller::encoderSpin() {
   }
   else
     motor.steer(stop);
+}
+
+//This function updates the variables for which spot 
+//in the blocks array the specific signatures is in
+void Controller::getSigVariables(){
+  //Loops through each object in blocks,
+  //blocksCount is the size of the array
+  for(int i=0;i<blocksCount;i++){
+    //if the object in blocks equals to a specific signature
+    //the designated variable for that signature is set
+    if(pixy.blocks[i].signature==BALL){
+      ballVar = i;
+    }
+    else if(pixy.blocks[i].signature==OPPONENT){
+      opponentVar = i;
+    }
+  }
+}
+
+//Goes through the blocks function to determine
+//if ball is visible
+void Controller::checkIfBallSeen(){
+ for(int i=0;i<blocksCount;i++){
+  //if the signature for ball is found 
+  //then the ball is visible
+  if(pixy.blocks[i].signature==BALL){
+    ballVisible = true;
+  }
+ }
+}
+
+void Controller::checkSurroundings(){
+  for(int i=0;i<blocksCount;i++){
+    if(pixy.blocks[i].signature==OPPONENT){
+      if(pixy.blocks[i].width>80){
+        avoidObject();
+      }
+    }
+  }
 }
 
 void Controller::moveBacknForth(){
@@ -296,3 +349,4 @@ void ServoLoop::update(int32_t error)
   }
   m_prevError = error;
 }
+
