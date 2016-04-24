@@ -90,6 +90,7 @@ void setup() {
 void loop() {
 
   motor.checkMotors();
+  //controller.tiltServo();
 
   microphone.readMic();
   if(microphone.robotOn)

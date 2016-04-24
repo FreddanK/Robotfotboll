@@ -332,7 +332,7 @@ void Controller::tiltServo() {
   if(blocksCount) {
     int32_t tiltError = pixy.blocks[0].y - Y_CENTER;
     tiltLoop.update(tiltError);
-    pixy.setServos(0, PIXY_RCS_MAX_POS-tiltLoop.m_pos);
+    pixy.setServos(0, tiltLoop.m_pos);
   }
 }
 
@@ -355,10 +355,10 @@ void ServoLoop::update(int32_t error)
     //sprintf(buf, "%ld\n", vel);
     //Serial.print(buf);
     m_pos += vel;
-    if (m_pos>PIXY_RCS_MAX_POS) 
-      m_pos = PIXY_RCS_MAX_POS; 
-    else if (m_pos<PIXY_RCS_MIN_POS) 
-      m_pos = PIXY_RCS_MIN_POS;
+    if (m_pos>PIXY_RCS_MAX_POS-20) 
+      m_pos = PIXY_RCS_MAX_POS-20; 
+    else if (m_pos<PIXY_RCS_MIN_POS+20) 
+      m_pos = PIXY_RCS_MIN_POS+20;
   }
   m_prevError = error;
 }
