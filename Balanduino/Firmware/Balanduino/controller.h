@@ -47,7 +47,10 @@ public:
 	Controller(Motor& m, Pixy& p) : motor(m), pixy(p) {}
 
 	void doTask();
+  void doTaskGoalKeeper();
 	void goToObject(int object, int signature);
+  void goToObjectGoalkeeper(int object, int signature);
+  void goalKeeper(int object, int signature);
 	void kickBall();
 	void avoidObject();
 
@@ -64,6 +67,8 @@ public:
   void scoreGoal();
 
   void getPixelDistance();
+
+  float distancePixelsToCm(int object_size_pixels, float real_size_cm, bool measure_height);
 
 	//Test functions
 	void moveBacknForth();

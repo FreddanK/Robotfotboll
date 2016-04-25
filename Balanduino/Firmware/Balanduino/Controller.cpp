@@ -69,6 +69,86 @@ void Controller::doTask() {
   }
 }
 
+void Controller::doTaskGoalKeeper() {
+  uint16_t blocksCount = pixy.getBlocks();
+  
+  //Get the time since pixy last saw an object
+  uint32_t updateTimer = millis()-pixyTimer;
+  //if pixy sees an object the timer needs to be reset
+  if (blocksCount>0){
+    pixyTimer = millis();
+    actualBlocks = blocksCount;
+  }
+  if(task == search) {
+    //Pixys update frequency is 50Hz = 20ms
+    //Assume pixy sees something if blocksCount > 0
+    //or if it was less than 25ms since it last saw an object.
+    //(It needs to be a little higher than 20ms, otherwise there is
+    //a chance of missing an object.)
+    if(blocksCount || updateTimer<25) {
+      goalKeeper(0,BALL);
+    }
+    //This delay is to make the robot stop properly.
+    //Without it the robot is very unstable when an object suddently
+    //goes out of sight.
+    else if(updateTimer>=25 && updateTimer < 1500) {
+      motor.steer(stop);
+    }
+    else {
+      //Search for objects in the direction where the last
+      //seen object went out of sight.
+      uint16_t xPos = pixy.blocks[0].x;
+      uint16_t width = pixy.blocks[0].width;
+
+      if(xPos<120){
+        motor.steer(left,20);
+      }
+      else if(xPos>200){
+        motor.steer(right,20);
+      }
+    }
+  }
+  else if(task == kick) {
+    kickBall();
+  }
+  else {
+    motor.steer(stop);
+  }
+}
+
+void Controller::goalKeeper(int object, int signature) {
+  boolean hasKicked = false;
+  uint16_t xPos = pixy.blocks[object].x;
+  uint16_t width = pixy.blocks[object].width;
+
+  if(hasKicked == true && width < 50){
+    goToObjectGoalkeeper(0, GOAL);
+    findBall();
+    hasKicked = false;
+    }
+
+  if(xPos<120){
+    motor.steer(left,20);
+    }
+  else if(xPos>200){
+    motor.steer(right,20);
+    }
+  else if(width < 20){
+    if(signature == BALL){
+      motor.steer(stop);
+    }
+  }
+  else if(width > 100){
+   if(signature == BALL){      
+      goToObjectGoalkeeper(0,BALL);
+      task = kick;
+      hasKicked = true;
+      taskTimer = millis();
+      
+    }
+  }
+}
+
 void Controller::goToObject(int object, int signature) {
   uint16_t xPos = pixy.blocks[object].x;
   uint16_t width = pixy.blocks[object].width;
@@ -80,6 +160,23 @@ void Controller::goToObject(int object, int signature) {
     task=score;
   }
   else if(xPos<120){
+    motor.steer(left,20);
+    motor.steer(forward,5);
+  }
+  else if(xPos>200){
+    motor.steer(right,20);
+    motor.steer(forward,5);
+  }
+  else if(width > 10 && width < 110){
+    motor.steer(forward,20);
+  }
+}
+
+void Controller::goToObjectGoalkeeper(int object, int signature) {
+  uint16_t xPos = pixy.blocks[object].x;
+  uint16_t width = pixy.blocks[object].width;
+
+  if(xPos<120){
     motor.steer(left,20);
     motor.steer(forward,5);
   }
@@ -314,6 +411,19 @@ void Controller::checkSurroundings(){
   }
 }
 
+float Controller::distancePixelsToCm(int object_size_pixels, float real_size_cm, bool measure_height) {
+  float focal_length_cm = 0.28;
+  float image_width_pixels = 320;
+  float image_height_pixels = 200;
+  float sensor_width_cm = 0.3888;
+  float sensor_height_cm = 0.243;
+  if(measure_height)
+    return (focal_length_cm*real_size_cm*image_height_pixels)/(object_size_pixels*sensor_height_cm);
+  else
+    return (focal_length_cm*real_size_cm*image_width_pixels)/(object_size_pixels*sensor_width_cm);
+  
+}
+
 void Controller::moveBacknForth(){
   unsigned long time_since_start = millis();
   if(time_since_start>3000 && time_since_start<5000){
@@ -348,8 +458,7 @@ void Controller::findBall(){
     motor.steer(forward,0);
   }
   else if(width>=110){
-    task=kick;
-    taskTimer = millis();
+    motor.steer(stop);
   }
   else if(width > 10 && width < 110){
     motor.steer(forward,20); 
@@ -389,7 +498,7 @@ void Controller::tiltServo() {
   if(blocksCount) {
     int32_t tiltError = pixy.blocks[0].y - Y_CENTER;
     tiltLoop.update(tiltError);
-    pixy.setServos(0, PIXY_RCS_MAX_POS-tiltLoop.m_pos);
+    pixy.setServos(0, tiltLoop.m_pos);
   }
 }
 
@@ -412,10 +521,10 @@ void ServoLoop::update(int32_t error)
     //sprintf(buf, "%ld\n", vel);
     //Serial.print(buf);
     m_pos += vel;
-    if (m_pos>PIXY_RCS_MAX_POS) 
-      m_pos = PIXY_RCS_MAX_POS; 
-    else if (m_pos<PIXY_RCS_MIN_POS) 
-      m_pos = PIXY_RCS_MIN_POS;
+    if (m_pos>PIXY_RCS_MAX_POS-20) 
+      m_pos = PIXY_RCS_MAX_POS-20; 
+    else if (m_pos<PIXY_RCS_MIN_POS+20) 
+      m_pos = PIXY_RCS_MIN_POS+20;
   }
   m_prevError = error;
 }
