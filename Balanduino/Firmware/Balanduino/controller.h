@@ -43,7 +43,10 @@ public:
 	Controller(Motor& m, Pixy& p) : motor(m), pixy(p) {}
 
 	void doTask();
+  void doTaskGoalKeeper();
 	void goToObject(int object, int signature);
+  void goToObjectGoalkeeper(int object, int signature);
+  void goalKeeper(int object, int signature);
 	void kickBall();
 	void avoidObject();
 
