@@ -12,6 +12,8 @@ enum Task {
 	avoid,
 	goTo,
 	wait,
+  score,
+  center,
 };
 
 class Controller {
@@ -36,7 +38,9 @@ private:
   float rate = 0;
 
   uint32_t ballVar;
+  uint32_t goalVar;
   uint32_t opponentVar;
+  uint16_t pixelDistance;
   boolean ballVisible;
 
 public:
@@ -54,7 +58,12 @@ public:
 
   void getSigVariables();
   void checkSurroundings();
-  void checkIfBallSeen();
+  boolean checkVisibility(int signature);
+
+  void centerBall();
+  void scoreGoal();
+
+  void getPixelDistance();
 
 	//Test functions
 	void moveBacknForth();
