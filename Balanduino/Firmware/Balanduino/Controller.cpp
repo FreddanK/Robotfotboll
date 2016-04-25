@@ -153,8 +153,12 @@ void Controller::goToObject(int object, int signature) {
   uint16_t xPos = pixy.blocks[object].x;
   uint16_t width = pixy.blocks[object].width;
 
-  if (true==checkVisibility(GOAL) && true==checkVisibility(BALL)){
+  //if both goal and ball can be seen at the same time
+  //check the distance between them to determine which function to call
+  if (checkVisibility(GOAL) && checkVisibility(BALL)){
     getPixelDistance();
+  //if the distance between goal and ball is small
+  //start function scoreGoal
   }
   if(pixelDistance<100){
     task=score;
@@ -169,6 +173,10 @@ void Controller::goToObject(int object, int signature) {
   }
   else if(width > 10 && width < 110){
     motor.steer(forward,20);
+  }
+  else if(width>110){
+    task=kick;
+    taskTimer = millis();
   }
 }
 
@@ -309,6 +317,46 @@ void Controller::encoderSpin() {
     motor.steer(stop);
 }
 
+
+
+//adjust and centers both ball and goal to get
+//into "goal scoring position".
+//sets task to kick when position is right
+void Controller::scoreGoal(){
+  getSigVariables();
+  uint16_t xPosBall = pixy.blocks[ballVar].x;
+  uint16_t xPosGoal = pixy.blocks[goalVar].x;
+  uint16_t width = pixy.blocks[ballVar].width;
+  //When the goal is far out on either of the edges in pixys field of vision
+  //while the ball is not, THEN move forward
+  if((xPosGoal<50 && xPosBall>50 || xPosGoal>260 && xPosBall<260)){
+    motor.steer(forward,20);
+  }
+  //when the ball is to the right of the goal but the goal is not dissapearing from either side
+  //of the field of vision. THEN go right
+  else if(xPosBall>xPosGoal){
+    motor.steer(right,20);
+  }
+  //when the ball is to the left of the goal but the goal is not dissapearing from either side
+  //of the field of vision. THEN go left
+  else if(xPosBall<xPosGoal){
+    motor.steer(left,20);
+  }
+  //if both ball and goal is far to the left or far to the right, then center ball
+  else if((xPosGoal<50 && xPosBall<50) || (xPosGoal>260 && xPosBall>260)){
+    task=center;
+  }
+  //if ball is centered but still far. move forward
+  else if(xPosBall>120 && xPosBall<200 && width > 10 && width < 110){
+    motor.steer(forward,20);
+  }
+  //if ball is centered and close, kick ball
+  else if(xPosBall>120 && xPosBall<200 && width>110){
+    task=kick;
+    taskTimer = millis();
+  }
+}
+
 //This function updates the variables for which spot 
 //in the blocks array the specific signatures is in
 void Controller::getSigVariables(){
@@ -331,7 +379,7 @@ void Controller::getSigVariables(){
 
 //Goes through the blocks function to determine
 //if an object is visible
-boolean Controller::checkVisibility(int signature){
+bool Controller::checkVisibility(int signature){
  for(int i=0;i<blocksCount;i++){
   //if the signature for ball is found 
   //then the ball is visible
@@ -354,41 +402,6 @@ void Controller::centerBall(){
   }
   else{
     task=score;
-  }
-}
-
-//adjust and centers both ball and goal to get
-//into "goal scoring position".
-//sets task to kick when position is right
-void Controller::scoreGoal(){
-  getSigVariables();
-  uint16_t xPosBall = pixy.blocks[ballVar].x;
-  uint16_t xPosGoal = pixy.blocks[goalVar].x;
-  uint16_t width = pixy.blocks[ballVar].width;
-  //when the ball is to the right of the goal but the goal is not dissapearing from either side
-  //of the field of vision. THEN go right
-  if(xPosBall>xPosGoal){
-    motor.steer(right,20);
-  }
-  //when the ball is to the left of the goal but the goal is not dissapearing from either side
-  //of the field of vision. THEN go left
-  else if(xPosBall<xPosGoal){
-    motor.steer(left,20);
-  }
-  //When the goal is far out on either of the edges in pixys field of vision
-  //while the ball is not, THEN move forward
-  else if(xPosGoal<50 && xPosGoal>260 && xPosBall>50 && xPosBall<260){
-    motor.steer(forward,20);
-  }
-  else if(xPosGoal<50 && xPosGoal>260 && xPosBall<50 && xPosBall>260){
-    task=center;
-  }
-  else if(xPosBall>120 && xPosBall<200 && width > 10 && width < 110){
-    motor.steer(forward,20);
-  }
-  else if(xPosBall>120 && xPosBall<200 && width>110){
-    task=kick;
-    taskTimer = millis();
   }
 }
 

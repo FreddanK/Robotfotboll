@@ -40,7 +40,7 @@ private:
   uint32_t ballVar;
   uint32_t goalVar;
   uint32_t opponentVar;
-  uint16_t pixelDistance;
+  uint16_t pixelDistance=100;
   boolean ballVisible;
 
 public:
