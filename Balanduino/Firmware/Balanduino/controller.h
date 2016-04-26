@@ -21,6 +21,9 @@ private:
 	Motor& motor;
 	Pixy& pixy;
 
+  int16_t objectIndex[6];
+  float objectDistance[6];
+
   uint16_t blocksCount = 0;
   uint16_t actualBlocks;
 	Task task = search;
@@ -37,20 +40,21 @@ private:
   float targetTurningDistance = 0;
   float rate = 0;
 
-  uint32_t ballVar;
-  uint32_t goalVar;
-  uint32_t opponentVar;
   uint16_t pixelDistance=100;
   boolean ballVisible;
 
 public:
 	Controller(Motor& m, Pixy& p) : motor(m), pixy(p) {}
 
+  float distanceToObject(int object_size, float real_size, bool measure_height);
+  float distanceBetween(int16_t object1, int16_t object2); 
+  void getSignatureIndexes(uint16_t actualBlocks);
+
 	void doTask();
   void doTaskGoalKeeper();
-	void goToObject(int object, int signature);
-  void goToObjectGoalkeeper(int object, int signature);
-  void goalKeeper(int object, int signature);
+	void goToObject(int object);
+  void goToObjectGoalkeeper(int object);
+  void goalKeeper(int object);
 	void kickBall();
 	void avoidObject();
 
@@ -61,7 +65,7 @@ public:
 
   void getSigVariables();
   void checkSurroundings();
-  boolean checkVisibility(int signature);
+  boolean visible(int object);
 
   void centerBall();
   void scoreGoal();
