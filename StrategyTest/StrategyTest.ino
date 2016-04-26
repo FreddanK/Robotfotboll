@@ -60,7 +60,18 @@ void doTask() {
 
       if(blocksCount || updateTimer<25) {
         goToObject(0,1);
-      }
+
+        /*
+        if(objectIndex[BALL] != -1 && objectIndex[PLAYER2] != -1) {
+          float diff = distanceBetween(BALL, PLAYER2);
+          Serial.print("Distance ball: ");
+          Serial.print(objectDistance[BALL]);
+          Serial.print(" Distance player: ");
+          Serial.print(objectDistance[PLAYER2]);
+          Serial.print(" Diff: ");
+          Serial.println(diff);
+        }*/
+      
       /*
       if(objectIndex[BALL] > -1) {
         Serial.print("Ball ");
@@ -91,6 +102,7 @@ void doTask() {
    else {
       Serial.println("No object");
    }*/
+      }
     }
   }
   else if(task == kick) {
@@ -248,5 +260,18 @@ float distanceToObject(int object_size, float real_size, bool measure_height) {
   else
     return (focal_length*real_size*image_width)/(object_size*sensor_width);
   
+}
+
+//Calculate the distance between two objects
+//Example of use: float var = distanceBetween(BALL,PLAYER2);
+float distanceBetween(int16_t object1, int16_t object2) {
+  uint16_t xPos1 = pixy.blocks[objectIndex[object1]].x;
+  uint16_t xPos2 = pixy.blocks[objectIndex[object2]].x;
+  float d1 = objectDistance[object1];
+  float d2 = objectDistance[object2];
+  float image_width = 320; //pixels
+  float fov = 75*3.141592654/180; //field of view, degrees
+
+  return sqrt(sq(d1)+sq(d2)-2*d1*d2*cos((abs(xPos1-xPos2)/image_width)*fov)); 
 }
 
