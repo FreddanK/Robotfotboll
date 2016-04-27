@@ -25,7 +25,7 @@ private:
   float objectDistance[6];
 
   uint16_t blocksCount = 0;
-  uint16_t actualBlocks;
+
 	Task task = search;
 	uint32_t taskTimer = 0;
   uint32_t pixyTimer = 0;
@@ -40,8 +40,6 @@ private:
   float targetTurningDistance = 0;
   float rate = 0;
 
-  uint16_t pixelDistance=100;
-  boolean ballVisible;
 
 public:
 	Controller(Motor& m, Pixy& p) : motor(m), pixy(p) {}

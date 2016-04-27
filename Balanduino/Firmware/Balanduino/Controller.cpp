@@ -36,18 +36,20 @@ void Controller::doTask() {
       if(visible(BALL)){
         goToObject(BALL);
       }
+      else {
+        motor.steer(left,20); //Just temporary. Here should be some kind of look for ball function
+      }
     }
     //This delay is to make the robot stop properly.
     //Without it the robot is very unstable when an object suddently
     //goes out of sight.
     else if(updateTimer>=25 && updateTimer < 1500) {
-      motor.steer(forward,0);
+      motor.steer(stop);
     }
     else {
       //Search for objects in the direction where the last
       //seen object went out of sight.
       uint16_t xPos = pixy.blocks[0].x;
-      uint16_t width = pixy.blocks[0].width;
 
       if(xPos<120){
         motor.steer(left,20);
@@ -55,7 +57,6 @@ void Controller::doTask() {
       else if(xPos>200){
         motor.steer(right,20);
       }
-      motor.steer(right,20);
     }
   }
   else if(task == kick) {
@@ -64,14 +65,14 @@ void Controller::doTask() {
   else if(task == avoid) {
     avoidObject();
   }
-  else if(task=score){
+  else if(task == score){
     scoreGoal();
   }
-  else if(task=center){
+  else if(task == center){
     centerBall();
   }
   else {
-    motor.steer(forward,0);
+    motor.steer(stop,0);
   }
 }
 
@@ -83,7 +84,7 @@ void Controller::doTaskGoalKeeper() {
   //if pixy sees an object the timer needs to be reset
   if (blocksCount>0){
     pixyTimer = millis();
-    actualBlocks = blocksCount;
+    getSignatureIndexes(blocksCount);
   }
   if(task == search) {
     //Pixys update frequency is 50Hz = 20ms
