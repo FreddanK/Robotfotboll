@@ -14,14 +14,21 @@
 
 
 void Controller::doTask() {
+  
   uint16_t blocksCount = pixy.getBlocks();
   
   //Get the time since pixy last saw an object
   uint32_t updateTimer = millis()-pixyTimer;
   //if pixy sees an object the timer needs to be reset
+
+  uint16_t lastXPosBall;
+  
   if (blocksCount>0){
     pixyTimer = millis();
     getSignatureIndexes(blocksCount);
+    if(visible(BALL)){
+      lastXPosBall=pixy.blocks[objectIndex[BALL]].x;
+    }
   }
   //if pixy sees at least two objects, check the distance
   //between the ball and goal to determine which function to call
@@ -37,7 +44,7 @@ void Controller::doTask() {
         goToObject(BALL);
       }
       else {
-        motor.steer(left,20); //Just temporary. Here should be some kind of look for ball function
+        findBall(lastXPosBall); //Just temporary. Here should be some kind of look for ball function
       }
     }
     //This delay is to make the robot stop properly.
@@ -74,6 +81,18 @@ void Controller::doTask() {
   else {
     motor.steer(stop,0);
   }
+}
+
+void Controller::findBall(int ballPos){ 
+ if(ballPos<120){
+  motor.steer(left,20);
+ }
+ else if(ballPos>200){
+  motor.steer(right,20);
+ }
+ else {
+  motor.steer(stop);
+ }
 }
 
 void Controller::doTaskGoalKeeper() {
