@@ -42,6 +42,7 @@ private:
   float objectDistance[6];
 
 	Task task = search;
+  bool centered=false;
 	uint32_t taskTimer = 0;
   uint32_t pixyTimer = 0;
   uint16_t lastXPosBall;
