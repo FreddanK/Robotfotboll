@@ -174,10 +174,10 @@ void Motor::updatePID(float restAngle, float offset, float turning, float dt) {
   /* Update PID values */
   float error = restAngle - pitch;
   //scaled cfg.I with fator 1.2, cfg.P with factor 1.2, cfg.D with factor 1.4
-  float pTerm = cfg.P*1.2 * error;
-  iTerm += cfg.I*1.2 * 100.0f * error * dt; // Multiplication with Ki is done before integration limit, to make it independent from integration limit value
+  float pTerm = cfg.P * error;
+  iTerm += cfg.I * 100.0f * error * dt; // Multiplication with Ki is done before integration limit, to make it independent from integration limit value
   iTerm = constrain(iTerm, -100.0f, 100.0f); // Limit the integrated error - prevents windup
-  float dTerm = (cfg.D*1.4 / 100.0f) * (error - lastError) / dt;
+  float dTerm = (cfg.D / 100.0f) * (error - lastError) / dt;
   lastError = error;
   float PIDValue = pTerm + iTerm + dTerm;
 
