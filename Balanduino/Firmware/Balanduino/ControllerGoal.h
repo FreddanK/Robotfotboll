@@ -20,7 +20,8 @@ class ControllerGoal {
 private:
   Motor& motor;
   Pixy& pixy;
-
+  
+  uint16_t lastXPosBall;
   int16_t objectIndex[6];
   float objectDistance[6];
 
@@ -52,8 +53,7 @@ public:
   void goToObject(int object);
   void goalKeeper(int object);
   void kickBall();
-  void avoidObject();
-  void findBall();
+  void findBall(int object);
 
   void setupEncoderMove(float d, float r, float s);
   void setupEncoderSpin(float degrees, float s);
@@ -61,8 +61,6 @@ public:
   void encoderSpin();
 
   bool visible(int object);
-
-  void centerBall();
 
   void getPixelDistance();
 
