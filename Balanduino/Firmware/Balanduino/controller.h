@@ -3,6 +3,7 @@
 
 #include <Pixy.h>
 #include <stdint.h>
+#include <QueueList.h>
 
 #include "Motor.h";
 
@@ -16,6 +17,22 @@ enum Task {
   center,
 };
 
+enum MoveType {
+  line, spin,
+};
+
+struct MoveInstruction {
+    MoveType moveType;
+    float distance;
+    float radius;
+    float speed;
+    float degree;
+    MoveInstruction() : moveType(line), distance(0), radius(0), speed(0), degree(0) {}
+    MoveInstruction(MoveType m, float s, float deg) {MoveInstruction(m,0,0,s,deg);}
+    MoveInstruction(MoveType m, float d, float r, float s) {MoveInstruction(m,d,r,s,0);}
+    MoveInstruction(MoveType m, float d, float r, float s, float deg) : moveType(m), distance(d), radius(r), speed(s), degree(deg) {}
+};
+
 class Controller {
 private:
 	Motor& motor;
@@ -24,12 +41,12 @@ private:
   int16_t objectIndex[6];
   float objectDistance[6];
 
-  uint16_t blocksCount = 0;
-  uint16_t pixelDistance;
-
 	Task task = search;
 	uint32_t taskTimer = 0;
   uint32_t pixyTimer = 0;
+  uint16_t lastXPosBall;
+
+  QueueList <MoveInstruction> moveInstructionQueue;
 
   int32_t startLeftvalue = 0;
   int32_t startRightvalue = 0;
@@ -45,40 +62,25 @@ private:
 public:
 	Controller(Motor& m, Pixy& p) : motor(m), pixy(p) {}
 
-  float distanceToObject(int object_size, float real_size, bool measure_height);
-  float distanceBetween(int16_t object1, int16_t object2); 
-  void getSignatureIndexes(uint16_t actualBlocks);
-  void findBall(int ballPos);
-
-	void doTask();
-  void doTaskGoalKeeper();
-	void goToObject(int object);
-  void goToObjectGoalkeeper(int object);
-  void goalKeeper(int object);
-	void kickBall();
-	void avoidObject();
+  void doTask();
+  
+  void goToObject(int object);
+  void scoreGoal();
+  void kickBall();
+  void avoidObject();
+  void centerBall();
+  void findBall();
 
   void setupEncoderMove(float d, float r, float s);
   void setupEncoderSpin(float degrees, float s);
   void encoderMove();
   void encoderSpin();
 
-  void getSigVariables();
-  void checkSurroundings();
-  boolean visible(int object);
-
-  void centerBall();
-  void scoreGoal();
-
-  void getPixelDistance();
-
-  float distancePixelsToCm(int object_size_pixels, float real_size_cm, bool measure_height);
-
-	//Test functions
-	void moveBacknForth();
-	void findBall();
-	void rotate360();
-	void makeCircle();
+  void getSignatureIndexes(uint16_t actualBlocks);
+  boolean isVisible(int object);
+  float distanceToObject(int object_size, float real_size, bool measure_height);
+  float distanceBetween(int16_t object1, int16_t object2);
+  int16_t getXposDiff(int16_t object1, int16_t object2);
 
   void tiltServo();
 
