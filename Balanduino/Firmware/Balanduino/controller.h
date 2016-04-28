@@ -25,6 +25,7 @@ private:
   float objectDistance[6];
 
   uint16_t blocksCount = 0;
+  uint16_t pixelDistance;
 
 	Task task = search;
 	uint32_t taskTimer = 0;

@@ -54,9 +54,9 @@ void Eeprom::updateConfig() {
 }
 
 void Eeprom::restoreEEPROMValues() {
-  motor->cfg.P = 9.0f;
-  motor->cfg.I = 2.0f;
-  motor->cfg.D = 3.0f;
+  motor->cfg.P = 9.0f; //start value 9
+  motor->cfg.I = 2.0f; //start value 2
+  motor->cfg.D = 3.0f; //start value 3
 
   motor->cfg.targetAngle = 180.0f;
   motor->cfg.backToSpot = 1;

@@ -95,86 +95,6 @@ void Controller::findBall(int ballPos){
  }
 }
 
-void Controller::doTaskGoalKeeper() {
-  uint16_t blocksCount = pixy.getBlocks();
-  
-  //Get the time since pixy last saw an object
-  uint32_t updateTimer = millis()-pixyTimer;
-  //if pixy sees an object the timer needs to be reset
-  if (blocksCount>0){
-    pixyTimer = millis();
-    getSignatureIndexes(blocksCount);
-  }
-  if(task == search) {
-    //Pixys update frequency is 50Hz = 20ms
-    //Assume pixy sees something if blocksCount > 0
-    //or if it was less than 25ms since it last saw an object.
-    //(It needs to be a little higher than 20ms, otherwise there is
-    //a chance of missing an object.)
-    if(blocksCount || updateTimer<25) {
-      goalKeeper(0);
-    }
-    //This delay is to make the robot stop properly.
-    //Without it the robot is very unstable when an object suddently
-    //goes out of sight.
-    else if(updateTimer>=25 && updateTimer < 1500) {
-      motor.steer(stop);
-    }
-    else {
-      //Search for objects in the direction where the last
-      //seen object went out of sight.
-      uint16_t xPos = pixy.blocks[0].x;
-      uint16_t width = pixy.blocks[0].width;
-
-      if(xPos<120){
-        motor.steer(left,20);
-      }
-      else if(xPos>200){
-        motor.steer(right,20);
-      }
-    }
-  }
-  else if(task == kick) {
-    kickBall();
-  }
-  else {
-    motor.steer(stop);
-  }
-}
-
-void Controller::goalKeeper(int object) {
-  boolean hasKicked = false;
-  uint16_t xPos = pixy.blocks[object].x;
-  uint16_t width = pixy.blocks[object].width;
-
-  if(hasKicked == true && width < 50){
-    goToObjectGoalkeeper(BALL);
-    findBall();
-    hasKicked = false;
-    }
-
-  if(xPos<120){
-    motor.steer(left,20);
-    }
-  else if(xPos>200){
-    motor.steer(right,20);
-    }
-  else if(visible(BALL)){
-    if(width < 20){
-      motor.steer(stop);
-    }
-  }
-  else if(width > 100){
-   if(visible(BALL)){      
-      goToObjectGoalkeeper(BALL);
-      task = kick;
-      hasKicked = true;
-      taskTimer = millis();
-      
-    }
-  }
-}
-
 bool Controller::visible(int object) {
   if(objectIndex[object]!=-1){
     return true;
@@ -188,15 +108,15 @@ void Controller::goToObject(int object) {
 
   //if both goal and ball can be seen at the same time
   //check the distance between them to determine which function to call
-  /*if (objectIndex[BALL] != -1 && objectIndex[GOAL2] != -1){
-    getPixelDistance();
-  //if the distance between goal and ball is small
-  //start function scoreGoal
-  }
-  if(pixelDistance<100){
-    task=score;
-  }
-  else*/ 
+//  if (visible(BALL) && visible(GOAL2)){
+//    getPixelDistance();
+//  //if the distance between goal and ball is small
+//  //start function scoreGoal
+//  }
+//  if(pixelDistance<100){
+//    task=score;
+//  }
+//  else
   if(xPos<120){
     motor.steer(left,20);
     motor.steer(forward,5);
@@ -219,14 +139,14 @@ void Controller::goToObject(int object) {
 //sets task to kick when position is right
 void Controller::scoreGoal(){
   uint16_t xPosBall = pixy.blocks[objectIndex[BALL]].x;
-  uint16_t xPosGoal = pixy.blocks[objectIndex[GOAL1]].x;
+  uint16_t xPosGoal = pixy.blocks[objectIndex[GOAL2]].x;
   uint16_t width = pixy.blocks[objectIndex[BALL]].width;
   //When the goal is far out on either of the edges in pixys field of vision
   //while the ball is not, THEN move forward
-//  if((xPosGoal<50 && xPosBall>50 || xPosGoal>260 && xPosBall<260)){
-//    motor.steer(forward,20);
-//    Serial.println("Forward");
-//  }
+  if((xPosGoal<50 && xPosBall>50 || xPosGoal>260 && xPosBall<260)){
+    motor.steer(forward,20);
+    Serial.println("Forward");
+  }
   //when the ball is to the right of the goal but the goal is not dissapearing from either side
   //of the field of vision. THEN go right
   if(xPosBall>xPosGoal){
@@ -239,7 +159,6 @@ void Controller::scoreGoal(){
     motor.steer(left,20);
     Serial.println("Go left");
   }
-  /*
   //if both ball and goal is far to the left or far to the right, then center ball
   else if((xPosGoal<50 && xPosBall<50) || (xPosGoal>260 && xPosBall>260)){
     task=center;
@@ -255,23 +174,6 @@ void Controller::scoreGoal(){
     task=kick;
     taskTimer = millis();
     Serial.println("Kick!");
-  }*/
-}
-
-void Controller::goToObjectGoalkeeper(int object) {
-  uint16_t xPos = pixy.blocks[objectIndex[object]].x;
-  uint16_t width = pixy.blocks[objectIndex[object]].width;
-
-  if(xPos<120){
-    motor.steer(left,20);
-    motor.steer(forward,5);
-  }
-  else if(xPos>200){
-    motor.steer(right,20);
-    motor.steer(forward,5);
-  }
-  else if(width > 10 && width < 110){
-    motor.steer(forward,20);
   }
 }
 
@@ -491,7 +393,7 @@ void Controller::centerBall(){
 void Controller::getPixelDistance(){
   uint16_t xPosBall = pixy.blocks[objectIndex[BALL]].x;
   uint16_t xPosGoal = pixy.blocks[objectIndex[GOAL1]].x;
-  uint16_t pixelDistance = abs(xPosBall-xPosGoal);
+  pixelDistance = abs(xPosBall-xPosGoal);
 }
 
 float Controller::distancePixelsToCm(int object_size_pixels, float real_size_cm, bool measure_height) {
