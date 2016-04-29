@@ -11,10 +11,10 @@ enum Task {
 	search,
 	kick,
 	avoid,
-	goTo,
-	wait,
+	goToBall,
   score,
   center,
+  encMove,
 };
 
 enum MoveType {
@@ -28,8 +28,8 @@ struct MoveInstruction {
     float speed;
     float degree;
     MoveInstruction() : moveType(line), distance(0), radius(0), speed(0), degree(0) {}
-    MoveInstruction(MoveType m, float s, float deg) {MoveInstruction(m,0,0,s,deg);}
-    MoveInstruction(MoveType m, float d, float r, float s) {MoveInstruction(m,d,r,s,0);}
+    MoveInstruction(MoveType m, float s, float deg) : moveType(m), distance(0), radius(0), speed(s), degree(deg) {}
+    MoveInstruction(MoveType m, float d, float r, float s) : moveType(m), distance(d), radius(r), speed(s), degree(0) {}
     MoveInstruction(MoveType m, float d, float r, float s, float deg) : moveType(m), distance(d), radius(r), speed(s), degree(deg) {}
 };
 
@@ -42,27 +42,31 @@ private:
   float objectDistance[6];
 
 	Task task = search;
+
 	uint32_t taskTimer = 0;
   uint32_t pixyTimer = 0;
+
   uint16_t lastXPosBall;
 
-  QueueList <MoveInstruction> moveInstructionQueue;
+  
 
   int32_t startLeftvalue = 0;
   int32_t startRightvalue = 0;
-  int32_t startValue = 0;
+  //int32_t startValue = 0;
 
-  float targetDistance = 0;
-  float radius = 0;
-  float speed = 0;
+  //float targetDistance = 0;
+  //float radius = 0;
+  //float speed = 0;
   float targetTurningDistance = 0;
-  float rate = 0;
+  bool getNewMove = true;
 
 
 public:
+  QueueList <MoveInstruction> moveInstructionQueue;
 	Controller(Motor& m, Pixy& p) : motor(m), pixy(p) {}
 
   void doTask();
+  Task makeDecision(uint16_t actualBlocks, Task lastTask);
   
   void goToObject(int object);
   void scoreGoal();
@@ -71,13 +75,13 @@ public:
   void centerBall();
   void findBall();
 
-  void setupEncoderMove(float d, float r, float s);
-  void setupEncoderSpin(float degrees, float s);
+  void setupEncoderMove();
   void encoderMove();
-  void encoderSpin();
+  float spinCheck();
 
   void getSignatureIndexes(uint16_t actualBlocks);
-  boolean isVisible(int object);
+  bool isVisible(int object);
+  void calculateTrajectory();
   float distanceToObject(int object_size, float real_size, bool measure_height);
   float distanceBetween(int16_t object1, int16_t object2);
   int16_t getXposDiff(int16_t object1, int16_t object2);
