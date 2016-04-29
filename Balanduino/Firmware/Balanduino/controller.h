@@ -41,11 +41,12 @@ private:
   int16_t objectIndex[6];
   float objectDistance[6];
 
-	Task task = search;
+	Task task = score;
   bool centered=false;
 	uint32_t taskTimer = 0;
   uint32_t pixyTimer = 0;
   uint16_t lastXPosBall;
+  uint16_t lastXPosGoal;
 
   QueueList <MoveInstruction> moveInstructionQueue;
 
@@ -71,6 +72,7 @@ public:
   void avoidObject();
   void centerBall();
   void findBall();
+  void findGoal();
 
   void setupEncoderMove(float d, float r, float s);
   void setupEncoderSpin(float degrees, float s);

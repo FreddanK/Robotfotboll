@@ -26,6 +26,7 @@ void Controller::doTask() {
     getSignatureIndexes(blocksCount);
     if(isVisible(BALL)){
       lastXPosBall=pixy.blocks[objectIndex[BALL]].x;
+      lastXPosGoal=pixy.blocks[objectIndex[GOAL2]].x;
     }
   }
   //if pixy sees at least two objects, check the distance
@@ -75,9 +76,14 @@ void Controller::doTask() {
       if(isVisible(BALL) && isVisible(GOAL2)){
         scoreGoal();
       }
+//      else if(!isVisible(BALL)){
+//        findBall();
+//      }
+//      else if(!isVisible(GOAL2)){
+//        findGoal();
+//      }
       else{
         motor.steer(stop);
-        //findBall();
       }
     }
     else{
@@ -120,12 +126,8 @@ void Controller::scoreGoal(){
   uint16_t xPosBall = pixy.blocks[objectIndex[BALL]].x;
   uint16_t xPosGoal = pixy.blocks[objectIndex[GOAL2]].x;
   uint16_t width = pixy.blocks[objectIndex[BALL]].width;
-  //if both ball and goal is far to the left or far to the right, then center ball
-  if((xPosGoal<50 && xPosBall<50) || (xPosGoal>270 && xPosBall>270)){
-    task=center;
-  }
   //if ball is centered but still far. move forward
-  else if(xPosBall>120 && xPosBall<200 && width > 10 && width < 110 && centered){
+  if(xPosBall>120 && xPosBall<200 && width > 10 && width < 110 && centered){
     motor.steer(forward,20);
   }
   //if ball is centered and close, kick ball
@@ -135,20 +137,22 @@ void Controller::scoreGoal(){
   }
   //When the goal is far out on either of the edges in pixys field of vision
   //while the ball is not, THEN move forward
-  else if(xPosGoal<50 || xPosGoal>270){
+  else if((xPosGoal<70 && !centered) || (xPosGoal>240 && !centered)){
     motor.steer(forward,20);
+    //if both ball and goal is far to the left or far to the right, then center ball
+    if(xPosBall<10 || xPosBall>310){
+      task=center;
+    }
   }
   //when the ball is to the right of the goal but the goal is not dissapearing from either side
   //of the field of vision. THEN go right
-  else if(xPosBall>xPosGoal){
+  else if(xPosBall>xPosGoal && !centered){
     motor.steer(right,20);
-    motor.steer(forward,5);
   }
   //when the ball is to the left of the goal but the goal is not dissapearing from either side
   //of the field of vision. THEN go left
-  else if(xPosBall<xPosGoal){
+  else if(xPosBall<xPosGoal && !centered){
     motor.steer(left,20);
-    motor.steer(forward,5);
   }
   else{
     motor.steer(stop);
@@ -166,6 +170,7 @@ void Controller::kickBall() {
   else{
     motor.steer(stop);
     task=search;
+    centered=false;
     taskTimer = millis(); //unnecessary right now, but may be useful later
   }
 }
@@ -228,6 +233,17 @@ void Controller::findBall(){
  }
 }
 
+void Controller::findGoal(){ 
+ if(lastXPosGoal<120){
+  motor.steer(left,20);
+ }
+ else if(lastXPosGoal>200){
+  motor.steer(right,20);
+ }
+ else {
+  motor.steer(stop);
+ }
+}
 
 void Controller::setupEncoderMove(float d, float r, float s) {
   startValue = motor.getWheelsPosition();
