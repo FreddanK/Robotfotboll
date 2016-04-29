@@ -24,7 +24,7 @@ void ControllerGoal::doTask() {
   if (blocksCount>0){
     pixyTimer = millis();
     getSignatureIndexes(blocksCount);
-    if(visible(BALL)){
+    if(isVisible(BALL)){
       lastXPosBall=pixy.blocks[objectIndex[BALL]].x;
     }
   }
@@ -36,17 +36,43 @@ void ControllerGoal::doTask() {
     //(It needs to be a little higher than 20ms, otherwise there is
     //a chance of missing an object.)
     if(blocksCount || updateTimer<25) {
-      goalKeeper(BALL);
-    }
-   
-        //Search for objects in the direction where the last
-      //seen object went out of sight.
-      else {
-        findBall(lastXPosBall); //Just temporary. Here should be some kind of look for ball function
+      if(isVisible(BALL)){
+        goalKeeper(BALL);
       }
+      else{
+        motor.steer(stop);
+        }
+      }
+    else {
+      //Search for objects in the direction where the last
+      //seen object went out of sight.
+      uint16_t xPos = pixy.blocks[0].x;
+
+      if(xPos<120){
+        motor.steer(left,20);
+        motor.steer(forward, 5);
+      }
+      else if(xPos>200){
+        motor.steer(right,20);
+        motor.steer(forward, 5);
+      }
+      else{
+        motor.steer(stop);
+      }
+    }
   }
-  else if(task == kick) {
+  
+  else if(task == kick){
     kickBall();
+  }
+  else if(task == findgoal){
+    findGoal();
+  }
+  else if(task == gotogoal){
+    goToObject(GOAL1);
+  }
+  else if(task == gotoball){
+    goToObject(BALL);
   }
   else {
     motor.steer(stop);
@@ -57,41 +83,46 @@ void ControllerGoal::goalKeeper(int object) {
   boolean hasKicked = false;
   uint16_t xPos = pixy.blocks[object].x;
   uint16_t width = pixy.blocks[object].width;
+  float distanceToBall = objectDistance[BALL];
+  float dist;
+  
 
-  if(hasKicked == true && width < 50){
-    goToObject(GOAL1);
-    findBall(lastXPosBall);
+  if(hasKicked == true && distanceToBall > 200){
+    task = findgoal;
     hasKicked = false;
     }
 
-  if(xPos<120){
-    motor.steer(left,20);
-    }
-  else if(xPos>200){
-    motor.steer(right,20);
-    }
-  else if(visible(BALL)){
-    if(width < 20){
+  if(distanceToBall >= 100){
       motor.steer(stop);
     }
-  }
-  else if(width > 100){
-   if((visible(BALL)) && (distanceBetween(BALL, PLAYER2)) <= 100){      
-      goToObject(BALL);
-      task = kick;
-      hasKicked = true;
-      taskTimer = millis();
-      
+  
+  else{
+     if(isVisible(PLAYER2)){
+     dist = (distanceBetween(BALL, PLAYER2));
+        if(dist >= 100){              
+          task = gotoball; 
+          hasKicked = true;            
+        }
+        else if(dist < 100){
+        motor.steer(stop);
+       }
     }
+    else{
+        task = gotoball;
+        hasKicked = true;
+     }
   }
 }
 
-bool ControllerGoal::visible(int object) {
+
+bool ControllerGoal::isVisible(int object) {
   if(objectIndex[object]!=-1){
     return true;
   }
   else return false;
 }
+
+
 
 void ControllerGoal::goToObject(int object) {
   uint16_t xPos = pixy.blocks[objectIndex[object]].x;
@@ -107,6 +138,13 @@ void ControllerGoal::goToObject(int object) {
   }
   else if(width > 10 && width < 110){
     motor.steer(forward,20);
+    if(object == BALL){
+       task = kick;
+    }
+    else{
+      motor.steer(stop);
+      task = search;
+    }
   }
 }
 
@@ -124,7 +162,33 @@ void ControllerGoal::kickBall() {
   }
 }
 
-
+void ControllerGoal::findBall(){ 
+ if(lastXPosBall<120){
+  motor.steer(left,20);
+  motor.steer(forward,5);
+ }
+ else if(lastXPosBall>200){
+  motor.steer(right,20);
+  motor.steer(forward,5);
+ }
+ else {
+  motor.steer(stop);
+ }
+}
+void ControllerGoal::findGoal(){
+  if(lastXPosGoal<120){
+    motor.steer(left,20);
+    motor.steer(forward,5);
+  }
+  else if(lastXPosGoal>200){
+    motor.steer(right,20);
+    motor.steer(forward,5);
+ }
+ else {
+  motor.steer(stop);
+  task = gotogoal;
+ }
+}
 void ControllerGoal::getSignatureIndexes(uint16_t actualBlocks) {
   
   for(int i=0; i<6;i++){
@@ -187,7 +251,6 @@ float ControllerGoal::distanceToObject(int object_size, float real_size, bool me
     return (focal_length*real_size*image_height)/(object_size*sensor_height);
   else
     return (focal_length*real_size*image_width)/(object_size*sensor_width);
-  
 }
 
 //Calculate the distance between two objects
@@ -224,7 +287,7 @@ float ControllerGoal::distancePixelsToCm(int object_size_pixels, float real_size
   
 }
 
-void ControllerGoal::findBall(int object){
+void ControllerGoal::findObject(int object){
   uint16_t blocksCount = pixy.getBlocks();
   
   int width = pixy.blocks[0].width;
