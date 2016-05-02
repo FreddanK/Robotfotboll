@@ -10,9 +10,10 @@ enum Task {
   search,
   kick,
   avoid,
-  goTo,
+  findgoal,
+  gotogoal,
+  gotoball,
   wait,
-  score,
   center,
 };
 
@@ -20,7 +21,9 @@ class ControllerGoal {
 private:
   Motor& motor;
   Pixy& pixy;
-
+  
+  uint16_t lastXPosBall;
+  uint16_t lastXPosGoal;
   int16_t objectIndex[6];
   float objectDistance[6];
 
@@ -52,17 +55,16 @@ public:
   void goToObject(int object);
   void goalKeeper(int object);
   void kickBall();
-  void avoidObject();
+  void findObject(int object);
   void findBall();
-
+  void findGoal();
+  
   void setupEncoderMove(float d, float r, float s);
   void setupEncoderSpin(float degrees, float s);
   void encoderMove();
   void encoderSpin();
 
-  bool visible(int object);
-
-  void centerBall();
+  bool isVisible(int object);
 
   void getPixelDistance();
 

@@ -43,10 +43,13 @@ private:
 
 	Task task = search;
 
+  bool centered=false;
+
 	uint32_t taskTimer = 0;
   uint32_t pixyTimer = 0;
 
   uint16_t lastXPosBall;
+  uint16_t lastXPosGoal;
 
   
 
@@ -74,6 +77,7 @@ public:
   void avoidObject();
   void centerBall();
   void findBall();
+  void findGoal();
 
   void setupEncoderMove();
   void encoderMove();
