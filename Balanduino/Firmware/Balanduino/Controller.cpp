@@ -374,14 +374,14 @@ void Controller::getSignatureIndexes(uint16_t actualBlocks) {
     if(signature == 1) { //Ball
       if(objectIndex[BALL] == -1) { //only store information about the closest object
         objectIndex[BALL] = i;
-        objectDistance[BALL] = distanceToObject(pixy.blocks[i].width,12,false);
+        objectDistance[BALL] = distanceToObject(pixy.blocks[i].width,14,false);
       }
     }
     else if(signature == 045){ //Opponent goal
       uint16_t angle = pixy.blocks[i].angle; //TODO, angle doesen't seem to update as often as the rest of the parameters from the pixy, so it is not used right now
       if(objectIndex[GOAL2] == -1) { //only store information about the closest object
         objectIndex[GOAL2] = i;
-        objectDistance[GOAL2] = distanceToObject(pixy.blocks[i].width,100,false);
+        objectDistance[GOAL2] = distanceToObject(pixy.blocks[i].width,64,false);
       }
       /*
       if(90<angle && angle<=180 || -180<=angle && angle<-90){
@@ -421,23 +421,62 @@ void Controller::calculateTrajectory(){
   while(!moveInstructionQueue.isEmpty()) //Empty the queue before filling it
     moveInstructionQueue.pop();
 
-  uint16_t xPosGOAL= pixy.blocks[objectIndex[GOAL2]].x;
-  uint16_t xPosBALL= pixy.blocks[objectIndex[BALL]].x;
+  int16_t xPosGOAL= pixy.blocks[objectIndex[GOAL2]].x;
+  int16_t xPosBALL= pixy.blocks[objectIndex[BALL]].x;
+  Serial.print("XPosBall:");
+  Serial.print(xPosBALL);
+  Serial.print(" XPosGOAL:");
+  Serial.print(xPosGOAL);
+  Serial.print(" Distance to ball:");
+  Serial.print(objectDistance[BALL]);
+  Serial.print(" Distance to goal:");
+  Serial.println(objectDistance[GOAL2]);
   
-  float a = (abs(xPosGOAL-xPosBALL)/320)*75*(3.1415/180);
+  float alpha = ((xPosBALL-xPosGOAL)/320.0)*75.0*(3.1415/180.0);
   float d = distanceBetween(BALL, GOAL2);
-  float b = distanceToObject(pixy.blocks[objectIndex[BALL]].width, 15, false);
-  float c = asin(distanceToObject(pixy.blocks[objectIndex[GOAL2]].height, 20, true)*sin(a)/d);
+  float b = objectDistance[BALL];
+  float c = objectDistance[GOAL2];
+  float phi = acos((sq(d)+sq(b)-sq(c))/(2.0*d*b));
+ 
+
+  Serial.print(" Alpha:");
+  Serial.print(alpha*(180.0/3.14));
+  Serial.print(" d:");
+  Serial.print(d);
+  Serial.print(" Phi:");
+  Serial.println(phi*(180.0/3.14));
 
   MoveInstruction m;
-  m = MoveInstruction(spin,30,c);
-  moveInstructionQueue.push(m);
+  if(alpha > 0) {
+    m = MoveInstruction(spin,30,phi*(180/3.1415));
+    moveInstructionQueue.push(m); 
+    
+    m = MoveInstruction(line, abs(3.1415*b*sin(phi)/2.0),-b*sin(phi)/2.0,25);
+    moveInstructionQueue.push(m);
+  }
+  else if(alpha < 0) {
+    m = MoveInstruction(spin,30,-phi*(180/3.1415));
+    moveInstructionQueue.push(m); 
+    
+    m = MoveInstruction(line, abs(3.1415*b*sin(phi)/2.0),b*sin(phi)/2.0,25);
+    moveInstructionQueue.push(m);
+  }
+
+  // MoveInstruction m;
+  // m = MoveInstruction(spin,30,xPosBALL-xPosGOAL);
+  // moveInstructionQueue.push(m);
+
+  // m = MoveInstruction(line,20,0.25);
+  // moveInstructionQueue.push(m);
+
+  // m = MoveInstruction(spin,20,phi*180/3.1415);
+  // moveInstructionQueue.push(m);
   
-  m = MoveInstruction(line,(30+(b*cos(c))),0,30);
-  moveInstructionQueue.push(m);  
+  // m = MoveInstruction(line,50,0,25);
+  // moveInstructionQueue.push(m);   
   
-  m = MoveInstruction(line, 3.1415*b*sin(c)/2,b*sin(c)/2,30);
-  moveInstructionQueue.push(m);   
+  // m = MoveInstruction(line,150,50,20);
+  // moveInstructionQueue.push(m); 
 }
 
 
@@ -464,10 +503,10 @@ float Controller::distanceBetween(int16_t object1, int16_t object2) {
   uint16_t xPos2 = pixy.blocks[objectIndex[object2]].x;
   float d1 = objectDistance[object1];
   float d2 = objectDistance[object2];
-  float image_width = 320; //pixels
-  float fov = 75*3.141592654/180; //field of view, degrees
+  float image_width = 320.0; //pixels
+  float fov = 75.0*3.141592654/180; //field of view, degrees
 
-  return sqrt(sq(d1)+sq(d2)-2*d1*d2*cos((abs(xPos1-xPos2)/image_width)*fov)); 
+  return sqrt(sq(d1)+sq(d2)-2.0*d1*d2*cos((abs(xPos1-xPos2)/image_width)*fov)); 
 }
 
 //Calculates and returns difference in x-position for two objects

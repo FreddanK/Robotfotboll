@@ -194,12 +194,12 @@ void Motor::updatePID(float restAngle, float offset, float turning, float dt) {
   }
 
   if (turningRadius > 0){
-    radiusLeftScaler = (turningRadius - 10) / turningRadius;
-    radiusRightScaler = (turningRadius + 10) / turningRadius;
-  }
-  else if (turningRadius < 0){
     radiusLeftScaler = (turningRadius + 10) / turningRadius;
     radiusRightScaler = (turningRadius - 10) / turningRadius;
+  }
+  else if (turningRadius < 0){
+    radiusLeftScaler = (-turningRadius - 10) / -turningRadius;
+    radiusRightScaler = (-turningRadius + 10) / -turningRadius;
   }
   else if (turningRadius == 0){
     radiusLeftScaler = 1;

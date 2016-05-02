@@ -61,10 +61,11 @@ private:
   //float radius = 0;
   //float speed = 0;
   float targetTurningDistance = 0;
-  bool getNewMove = true;
+  
 
 
 public:
+  bool getNewMove = true;
   QueueList <MoveInstruction> moveInstructionQueue;
 	Controller(Motor& m, Pixy& p) : motor(m), pixy(p) {}
 
