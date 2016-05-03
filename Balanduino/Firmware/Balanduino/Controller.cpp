@@ -510,8 +510,8 @@ float Controller::distanceToObject(int object_size, float real_size, bool measur
 //Calculates the distance between two objects
 //Example of use: float var = distanceBetween(BALL,PLAYER2);
 float Controller::distanceBetween(int16_t object1, int16_t object2) {
-  uint16_t xPos1 = pixy.blocks[objectIndex[object1]].x;
-  uint16_t xPos2 = pixy.blocks[objectIndex[object2]].x;
+  int16_t xPos1 = pixy.blocks[objectIndex[object1]].x;
+  int16_t xPos2 = pixy.blocks[objectIndex[object2]].x;
   float d1 = objectDistance[object1];
   float d2 = objectDistance[object2];
   float image_width = 320.0; //pixels
@@ -522,9 +522,9 @@ float Controller::distanceBetween(int16_t object1, int16_t object2) {
 
 //Calculates and returns difference in x-position for two objects
 int16_t Controller::getXposDiff(int16_t object1, int16_t object2){
-  uint16_t xPos1 = pixy.blocks[objectIndex[object1]].x;
-  uint16_t xPos2 = pixy.blocks[objectIndex[object2]].x;
-  return abs(xPos1-xPos1);
+  int16_t xPos1 = pixy.blocks[objectIndex[object1]].x;
+  int16_t xPos2 = pixy.blocks[objectIndex[object2]].x;
+  return abs(xPos1-xPos2);
 }
 
 
