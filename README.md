@@ -2,9 +2,16 @@
 ### Introduction
 -------------------
 
-This project's aim is to devlop automated football playing
-robots. The code runs on predeveloped hardware such as the Balanduino
-robot which is a balancing robot based on the arduino platform. A camera called Pixy has ben used for objectdetection.
+This project's aim is to devlop automated football playing 
+robots. The code runs on predeveloped hardware such as the Balanduino 
+robot which is a balancing robot based on the arduino platform. 
+A camera called Pixy has ben used for objectdetection.
+
+### License
+-------------------
+This software may be distributed and modified under the terms of the GNU
+General Public License version 2 (GPL2) as published by the Free Software
+Foundation.
 
 ### Requirements
 -------------------
@@ -29,7 +36,10 @@ QueueList Library http://playground.arduino.cc/Code/QueueList
 USB Host Shield Library 2.0 https://github.com/felis/USB_Host_Shield_2.0
 
 ####Arduino Boards
-Hardware add-on whith the Balanduino board manager. See Installation for information on how to set this up. When adding this the Kalman Filter Library and USB Host Shield Library 2.0 will be installed automatically.
+Hardware add-on whith the Balanduino board manager. 
+See Installation for information on how to set this up. 
+When adding this the Kalman Filter Library and USB Host Shield Library 2.0 
+will be installed automatically.
 
 
 ### Installation
@@ -66,6 +76,8 @@ TODO: add FAQ and troubleshooting here
 
 ### Authors
 -------------------
+Bachelor project group SSYX02-1613:
+
 Sara Boström
 
 Edvin Eriksson Johansson
