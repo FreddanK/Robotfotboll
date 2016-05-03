@@ -14,14 +14,7 @@ the GPL2 ("Copyleft").
 #include <Arduino.h>
 
 #include "Motor.h"
-
-//Object, Index
-#define BALL 0  //Signature 1 (Ball)
-#define GOAL1 1 //Signature 45(octal) 90 < theta <= 180 and -180 <= theta <-90 (Own goal)
-#define GOAL2 2 //Signature 45(octal) -90 < theta < 90 (Opponents goal, yellow(left) blue(right))
-#define PLAYER1 3 //Signature 23(octal) -180 < theta < 0  (Team member)
-#define PLAYER2 4 //Signature 23(octal) 0 < theta < 180 (Opponent, purple(top) green(bottom)
-#define EDGE 5 //NA
+#include "Configuration.h"
 
 
 void Controller::doTask() {
@@ -382,17 +375,17 @@ void Controller::getSignatureIndexes(uint16_t actualBlocks) {
     
   for(int i=0; i<actualBlocks;i++) {
     uint16_t signature = pixy.blocks[i].signature;
-    if(signature == 1) { //Ball
+    if(signature == SIGN_BALL) { //Ball
       if(objectIndex[BALL] == -1) { //only store information about the closest object
         objectIndex[BALL] = i;
-        objectDistance[BALL] = distanceToObject(pixy.blocks[i].width,14,false);
+        objectDistance[BALL] = distanceToObject(pixy.blocks[i].width,REAL_WIDTH_BALL,false);
       }
     }
-    else if(signature == 045){ //Opponent goal
+    else if(signature == SIGN_GOAL){ //Opponent goal
       uint16_t angle = pixy.blocks[i].angle; //TODO, angle doesen't seem to update as often as the rest of the parameters from the pixy, so it is not used right now
       if(objectIndex[GOAL2] == -1) { //only store information about the closest object
         objectIndex[GOAL2] = i;
-        objectDistance[GOAL2] = distanceToObject(pixy.blocks[i].width,64,false);
+        objectDistance[GOAL2] = distanceToObject(pixy.blocks[i].width,REAL_WIDTH_GOAL,false);
       }
       /*
       if(90<angle && angle<=180 || -180<=angle && angle<-90){
@@ -403,11 +396,11 @@ void Controller::getSignatureIndexes(uint16_t actualBlocks) {
       }
       */
     }
-    else if(signature = 023) {  //Opponent player
+    else if(signature = SIGN_PLAYER) {  //Opponent player
       uint16_t angle = pixy.blocks[i].angle; //TODO, angle doesen't seem to update as often as the rest of the parameters from the pixy, so it is not used right now
       if(objectIndex[PLAYER2] == -1) { //only store information about the closest object
         objectIndex[PLAYER2] = i;
-        objectDistance[PLAYER2] = distanceToObject(pixy.blocks[i].height,15,true);
+        objectDistance[PLAYER2] = distanceToObject(pixy.blocks[i].height,REAL_HEIGHT_PLAYER,true);
       }
       /*
       if(-180<angle && angle<0){
