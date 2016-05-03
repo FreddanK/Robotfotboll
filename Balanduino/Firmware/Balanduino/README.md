@@ -1,6 +1,9 @@
 # Balanduino Arduino code
 #### Developed by Kristian Lauszus, TKJ Electronics 2013-2015
 
+#### Modified by bachelor project SSYX02-1613. Please refer to the README file in the project root
+for the most accurate information.
+
 The code is released under the GNU General Public License.
 _________
 

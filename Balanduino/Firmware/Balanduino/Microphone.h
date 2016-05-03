@@ -1,15 +1,25 @@
-/*Class that reads the input from the microphone and toggles the state
-  of the robot between on and paused.
-  Example of use:
-    Include this file, #include Microphone.h
-    Create an instance of the class, Microphone microphone{};
-  
-  In the main loop of the Balanduino program:
-    microphone.readMic();
-    if(microphone.robotOn)
-      'Calculate and give control input to the robot'
-    else
-      'Stop the robot so that it is balancing on the spot'
+/*
+Developed by bachelor project SSYX02-1613.
+
+This software may be distributed and modified under the terms of the GNU
+General Public License version 2 (GPL2) as published by the Free Software
+Foundation and appearing in the file GPL2.TXT included in the packaging of
+this file. Please note that GPL2 Section 2[b] requires that all works based
+on this software must also be made publicly available under the terms of
+the GPL2 ("Copyleft").
+
+This class reads the input from the microphone and toggles the state
+of the robot between on and paused.
+Example of use:
+  Include this file, #include Microphone.h
+  Create an instance of the class, Microphone microphone{};
+
+In the main loop of the Balanduino program:
+  microphone.readMic();
+  if(microphone.robotOn)
+    'Calculate and give control input to the robot'
+  else
+    'Stop the robot so that it is balancing on the spot'
 */
 #ifndef _microphone_h_
 #define _microphone_h_
