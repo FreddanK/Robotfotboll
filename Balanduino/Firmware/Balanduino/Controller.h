@@ -98,12 +98,14 @@ public:
   void setupEncoderMove();
   void encoderMove();
   float spinCheck();
+  void clearInstructionQueue();
 
   void getSignatureIndexes(uint16_t actualBlocks);
   bool isVisible(int object);
   void calculateTrajectory();
-  float distanceToObject(int object_size, float real_size, bool measure_height);
-  float distanceBetween(int16_t object1, int16_t object2);
+  void calculateTrajectory2();
+  double distanceToObject(int object_size, float real_size, bool measure_height);
+  double distanceBetween(int16_t object1, int16_t object2);
   int16_t getXposDiff(int16_t object1, int16_t object2);
 
   void tiltServo();

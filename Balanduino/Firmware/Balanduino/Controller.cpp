@@ -28,6 +28,8 @@ void Controller::doTask() {
     getSignatureIndexes(blocksCount);
     if(isVisible(BALL)){
       lastXPosBall=pixy.blocks[objectIndex[BALL]].x;
+    }
+    if(isVisible(GOAL2)){
       lastXPosGoal=pixy.blocks[objectIndex[GOAL2]].x;
     }
     task = makeDecision(blocksCount, task);
@@ -89,18 +91,17 @@ Task Controller::makeDecision(uint16_t actualBlocks, Task lastTask) {
       }
     }
     else if(isVisible(BALL) && isVisible(GOAL2)) {
-      // int16_t xDiff = getXposDiff(BALL,GOAL2);
-      // if(xDiff < 20)
-      //   nextTask = goToBall;
-      // else {
+
       if(lastTask != encMove)
         calculateTrajectory();
       nextTask = encMove;
-      // }
     }
     else if(isVisible(BALL)) {
-        nextTask = goToBall;
+      nextTask = goToBall;
     }
+
+    if(isVisible(BALL) && objectDistance[BALL] < 30)
+      nextTask = kick;
   }
 
   //Set task depending on lastTask and nextTask
@@ -200,7 +201,7 @@ void Controller::avoidObject() {
   uint16_t xPosBall = pixy.blocks[objectIndex[BALL]].x;
   uint16_t xPosObject = pixy.blocks[objectIndex[PLAYER2]].x;
   //ballVisible = visible(BALL);
-  if(true==isVisible(BALL)){
+  if(isVisible(BALL)){
     //if the ball is to the left of the object turn left
     if(xPosBall<xPosObject){
       motor.steer(left,20);
@@ -270,8 +271,10 @@ void Controller::setupEncoderMove() {
     targetTurningDistance = (moveIns.degree/360)*2*3.141592654*10;
     getNewMove = false;
   }
-  else
+  else{
+    motor.turningRadius = 0;
     task = search;
+  }
   
 }
 
@@ -366,6 +369,12 @@ float Controller::spinCheck() {
   return result;
 }
 
+void Controller::clearInstructionQueue(){
+  while(!moveInstructionQueue.isEmpty()) //Empty the queue before filling it
+      moveInstructionQueue.pop();
+  motor.turningRadius = 0;
+}
+
 void Controller::getSignatureIndexes(uint16_t actualBlocks) {
   
   for(int i=0; i<6;i++){
@@ -422,19 +431,87 @@ bool Controller::isVisible(int object) {
 }
 
 void Controller::calculateTrajectory(){
+  clearInstructionQueue();
+
+  int16_t xPosBALL= pixy.blocks[objectIndex[BALL]].x;
+  int16_t xPosGOAL= pixy.blocks[objectIndex[GOAL2]].x;
+
+  const double pi = 3.1415;
+
+  double alpha = ((xPosBALL-xPosGOAL)/320.0)*75.0*(pi/180.0);
+  double beta = ((xPosBALL-160)/320.0)*75.0*(pi/180.0);
+  double d = distanceBetween(BALL, GOAL2);
+  double b = objectDistance[BALL];
+  double c = objectDistance[GOAL2];
+  //double phi = acos((sq(d)+sq(b)-sq(c))/(2.0*d*b)); //cosinussatsen
+  double phi = pi - asin(c*sin(abs(alpha))/d); //sinussatsen
+
+  double theta = 2*pi - 2*phi;
+  double r = b/(2*sin(theta/2.0));
+  double l = r * theta;
+
+  Serial.print(" Alpha:");
+  Serial.print(alpha*(180.0/3.14));
+  Serial.print(" Beta:");
+  Serial.print(beta*(180/pi));
+  Serial.print(" Phi:");
+  Serial.print(phi*(180.0/3.14));
+  // Serial.print(" Phi2:");
+  // Serial.println(phi2*(180.0/3.14));
+
+  Serial.print(" Theta:");
+  Serial.print(theta*(180.0/3.14));
+  Serial.print(" r:");
+  Serial.print(r);
+  Serial.print(" l:");
+  Serial.println(l);
+
+  MoveInstruction m;
+  if(alpha > 0 && beta < 0) { //Ball to the right of goal and left of robot
+    double angle = theta/2.0 - abs(beta);
+    angle = angle*0.7;
+    m = MoveInstruction(spin,30,angle*(180/pi));
+    moveInstructionQueue.push(m); 
+    
+    m = MoveInstruction(line, l, -r,25);
+    moveInstructionQueue.push(m);
+  }
+  else if(alpha < 0 && beta > 0) { //Ball to the left of goal and right of robot
+    double angle = -(theta/2.0 - abs(beta));
+    angle = angle*0.7;
+    m = MoveInstruction(spin,30,angle*(180/pi));
+    moveInstructionQueue.push(m); 
+    
+    m = MoveInstruction(line, l, r,25);
+    moveInstructionQueue.push(m);
+  }
+  else if(alpha > 0 && beta > 0) { //Ball to the right of goal and right of robot
+    double angle = theta/2.0 + abs(beta);
+    angle = angle*0.7;
+    m = MoveInstruction(spin,30, angle*(180/pi));
+    moveInstructionQueue.push(m); 
+    
+    m = MoveInstruction(line, l, -r,25);
+    moveInstructionQueue.push(m);
+  }
+  else if(alpha < 0 && beta < 0) { //Ball to the left of goal and left of robot
+    double angle = -(theta/2.0 + abs(beta));
+    angle = angle*0.7;
+    m = MoveInstruction(spin,30,angle*(180/pi));
+    moveInstructionQueue.push(m); 
+    
+    m = MoveInstruction(line, l, r,25);
+    moveInstructionQueue.push(m);
+  }
+}
+
+void Controller::calculateTrajectory2(){
   while(!moveInstructionQueue.isEmpty()) //Empty the queue before filling it
     moveInstructionQueue.pop();
 
   int16_t xPosGOAL= pixy.blocks[objectIndex[GOAL2]].x;
   int16_t xPosBALL= pixy.blocks[objectIndex[BALL]].x;
-  Serial.print("XPosBall:");
-  Serial.print(xPosBALL);
-  Serial.print(" XPosGOAL:");
-  Serial.print(xPosGOAL);
-  Serial.print(" Distance to ball:");
-  Serial.print(objectDistance[BALL]);
-  Serial.print(" Distance to goal:");
-  Serial.println(objectDistance[GOAL2]);
+
   
   float alpha = ((xPosBALL-xPosGOAL)/320.0)*75.0*(3.1415/180.0);
   float d = distanceBetween(BALL, GOAL2);
@@ -442,13 +519,6 @@ void Controller::calculateTrajectory(){
   float c = objectDistance[GOAL2];
   float phi = acos((sq(d)+sq(b)-sq(c))/(2.0*d*b));
  
-
-  Serial.print(" Alpha:");
-  Serial.print(alpha*(180.0/3.14));
-  Serial.print(" d:");
-  Serial.print(d);
-  Serial.print(" Phi:");
-  Serial.println(phi*(180.0/3.14));
 
   MoveInstruction m;
   if(alpha > 0) {
@@ -465,34 +535,18 @@ void Controller::calculateTrajectory(){
     m = MoveInstruction(line, abs(3.1415*b*sin(phi)/2.0),b*sin(phi)/2.0,25);
     moveInstructionQueue.push(m);
   }
-
-  // MoveInstruction m;
-  // m = MoveInstruction(spin,30,xPosBALL-xPosGOAL);
-  // moveInstructionQueue.push(m);
-
-  // m = MoveInstruction(line,20,0.25);
-  // moveInstructionQueue.push(m);
-
-  // m = MoveInstruction(spin,20,phi*180/3.1415);
-  // moveInstructionQueue.push(m);
-  
-  // m = MoveInstruction(line,50,0,25);
-  // moveInstructionQueue.push(m);   
-  
-  // m = MoveInstruction(line,150,50,20);
-  // moveInstructionQueue.push(m); 
 }
 
 
 //Takes the object's size in pixels and converts it to distance in cm.
 //Arguments: the object's size (pixels), real size of the object (cm) and an extra argument
 //that is true if you want to measure the distance based on the heigth instead of the width.
-float Controller::distanceToObject(int object_size, float real_size, bool measure_height) {
-  float focal_length = 0.28; //cm
-  float image_width = 320; //pixels
-  float image_height = 200; //pixels
-  float sensor_width = 0.3888; //cm
-  float sensor_height = 0.243; //cm
+double Controller::distanceToObject(int object_size, float real_size, bool measure_height) {
+  double focal_length = 0.28; //cm
+  double image_width = 320.0; //pixels
+  double image_height = 200.0; //pixels
+  double sensor_width = 0.3888; //cm
+  double sensor_height = 0.243; //cm
   if(measure_height)
     return (focal_length*real_size*image_height)/(object_size*sensor_height);
   else
@@ -502,13 +556,13 @@ float Controller::distanceToObject(int object_size, float real_size, bool measur
 
 //Calculates the distance between two objects
 //Example of use: float var = distanceBetween(BALL,PLAYER2);
-float Controller::distanceBetween(int16_t object1, int16_t object2) {
+double Controller::distanceBetween(int16_t object1, int16_t object2) {
   int16_t xPos1 = pixy.blocks[objectIndex[object1]].x;
   int16_t xPos2 = pixy.blocks[objectIndex[object2]].x;
-  float d1 = objectDistance[object1];
-  float d2 = objectDistance[object2];
-  float image_width = 320.0; //pixels
-  float fov = 75.0*3.141592654/180; //field of view, degrees
+  double d1 = objectDistance[object1];
+  double d2 = objectDistance[object2];
+  double image_width = 320.0; //pixels
+  double fov = 75.0*3.141592654/180.0; //field of view, degrees
 
   return sqrt(sq(d1)+sq(d2)-2.0*d1*d2*cos((abs(xPos1-xPos2)/image_width)*fov)); 
 }
