@@ -31,6 +31,7 @@ Motor motor{};
 Eeprom eeprom{&motor};
 Pixy pixy{};
 Controller controller{motor, pixy};
+//ControllerGoal controller{motor, pixy};
 Tools tools{&motor, &eeprom};
 Bluetooth bluetooth{&motor, &tools};
 Microphone microphone{};
