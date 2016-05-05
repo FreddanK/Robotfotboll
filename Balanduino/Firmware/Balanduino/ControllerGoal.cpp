@@ -41,12 +41,12 @@ void ControllerGoal::doTask() {
       }
       else{
         motor.steer(stop);
-        }
       }
+    }
     else {
       //Search for objects in the direction where the last
       //seen object went out of sight.
-      uint16_t xPos = pixy.blocks[0].x;
+      uint16_t xPos = pixy.blocks[objectIndex[BALL]].x;
 
       if(xPos<120){
         motor.steer(left,20);
@@ -85,34 +85,34 @@ void ControllerGoal::goalKeeper(int object) {
   uint16_t width = pixy.blocks[object].width;
   float distanceToBall = objectDistance[BALL];
   float dist;
-  
 
-  if(hasKicked == true && distanceToBall > 200){
-    task = findgoal;
-    hasKicked = false;
-    }
-
-  if(distanceToBall >= 100){
-      motor.steer(stop);
-    }
-  
-  else{
-     if(isVisible(PLAYER2)){
-     dist = (distanceBetween(BALL, PLAYER2));
-        if(dist >= 100){              
-          task = gotoball; 
-          hasKicked = true;            
-        }
-        else if(dist < 100){
-        motor.steer(stop);
-       }
+  if(distanceToBall > 100,0){
+    if(hasKicked){
+      goToObject(GOAL1);
+      hasKicked = false;
     }
     else{
-        task = gotoball;
-        hasKicked = true;
-     }
+      motor.steer(stop);
+    }
+  }  
+  else if(isVisible(PLAYER2) && isVisible(BALL)){
+    dist = (distanceBetween(BALL, PLAYER2));
+    if(dist >= 50,0){              
+      task = gotoball;             
+    }
+    else{
+    motor.steer(stop);
+    }
+  }
+  else if(isVisible(BALL)){
+    motor.steer(left,20);
+    //task = gotoball;
+  }
+  else{
+    motor.steer(stop);
   }
 }
+
 
 
 bool ControllerGoal::isVisible(int object) {
@@ -136,15 +136,16 @@ void ControllerGoal::goToObject(int object) {
     motor.steer(right,20);
     motor.steer(forward,5);
   }
-  else if(width > 10 && width < 110){
+  else if(width > 10 && width < 100){
     motor.steer(forward,20);
-    if(object == BALL){
-       task = kick;
-    }
-    else{
-      motor.steer(stop);
-      task = search;
-    }
+  }
+  else if(width<100 && object==BALL){
+    task = kick;
+    hasKicked=true;
+  }
+  else{
+    motor.steer(stop);
+    task=search;
   }
 }
 
@@ -286,31 +287,3 @@ float ControllerGoal::distancePixelsToCm(int object_size_pixels, float real_size
     return (focal_length_cm*real_size_cm*image_width_pixels)/(object_size_pixels*sensor_width_cm);
   
 }
-
-void ControllerGoal::findObject(int object){
-  uint16_t blocksCount = pixy.getBlocks();
-  
-  int width = pixy.blocks[0].width;
-  int xPos = pixy.blocks[0].x;
-  
-  if(xPos<120){
-    motor.steer(left,20);
-    motor.steer(forward,0);
-    //motor.steerStop = true;
-    //motor.turningOffset = -12;
-  }
-  else if(xPos>200){
-    motor.steer(right,20);
-    motor.steer(forward,0);
-  }
-  else if(width>=110){
-    motor.steer(stop);
-  }
-  else if(width > 10 && width < 110){
-    motor.steer(forward,20); 
-  }
-  else {
-    motor.steer(stop);
-  }
-}
-
