@@ -84,10 +84,11 @@ void loop() {
   //controller.tiltServo();
 
   microphone.readMic();
-  if(microphone.robotOn)
+  if(microphone.robotOn){
     controller.doTask(); //when running offensive player
     //controllerGoal.doTask(); //when running goalkeeper
-  else
+  }
+  else{
     motor.steer(stop);
     //controller.clearInstructionQueue();
   }
