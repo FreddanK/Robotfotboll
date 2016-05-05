@@ -253,10 +253,10 @@ void Controller::findBall(){
 
 void Controller::findGoal(){ 
  if(lastXPosGoal<120){
-  motor.steer(left,20);
+  motor.steer(left,30);
  }
  else if(lastXPosGoal>200){
-  motor.steer(right,20);
+  motor.steer(right,30);
  }
  else {
   motor.steer(stop);
@@ -279,65 +279,70 @@ void Controller::setupEncoderMove() {
 }
 
 void Controller::encoderMove(){
-  MoveInstruction moveIns = moveInstructionQueue.peek();
-  float circumference = 30.9211; //the wheel's circumference in cm
-  int32_t pulses = 1856; //number of pulses per revolation (928 for each wheel)
-  
-  float startValue = startLeftvalue+startRightvalue;
-  float position = motor.getWheelsPosition() - startValue;
-  float distance = -position*circumference/(pulses*2); //position is negative when driving forward and positive when driving backwards
-  
-  bool moveFinished = false;
+  bool moveFinished = true;
 
-  if(moveIns.moveType == line) {
-    if (moveIns.distance >= 0) { //Drive forwards
-      if (distance < moveIns.distance){
-        motor.steer(stop);   //This is only to make sure turningOffset is 0
-        motor.steer(forward,moveIns.speed);
-        motor.turningRadius = moveIns.radius;
-      }
-      else if(distance >= moveIns.distance){
-        moveFinished = true;
-      }
-    }
-    else if(moveIns.distance < 0) { //Drive backwards
-      if (distance > moveIns.distance){
-        motor.steer(stop);   //This is only to make sure turningOffset is 0
-        motor.steer(backward,moveIns.speed);
-        motor.turningRadius = moveIns.radius;
-      }
-      else if(distance <= moveIns.distance){
-        moveFinished = true;
-      }
-    }
-  }
-  else if(moveIns.moveType == spin) {
-    int32_t rightwheelpos = motor.readRightEncoder() - startLeftvalue;
-    int32_t leftwheelpos = motor.readLeftEncoder() - startRightvalue;
+  if(!moveInstructionQueue.isEmpty()){
+    moveFinished = false;
+
+    MoveInstruction moveIns = moveInstructionQueue.peek();
+    float circumference = 30.9211; //the wheel's circumference in cm
+    int32_t pulses = 1856; //number of pulses per revolation (928 for each wheel)
     
-    float leftdistance = -leftwheelpos*circumference/(pulses*2); //the position is negative when driving forwards and positive when driving backwards
-    float rightdistance = -rightwheelpos*circumference/(pulses*2);
+    float startValue = startLeftvalue+startRightvalue;
+    float position = motor.getWheelsPosition() - startValue;
+    float distance = -position*circumference/(pulses*2); //position is negative when driving forward and positive when driving backwards
 
-    float diff = leftdistance - rightdistance;
 
-    if(targetTurningDistance > 0) { //spin right
-      if(diff < targetTurningDistance){
-        motor.steer(right,moveIns.speed);
+    if(moveIns.moveType == line) {
+      if (moveIns.distance >= 0) { //Drive forwards
+        if (distance < moveIns.distance){
+          motor.steer(stop);   //This is only to make sure turningOffset is 0
+          motor.steer(forward,moveIns.speed);
+          motor.turningRadius = moveIns.radius;
+        }
+        else if(distance >= moveIns.distance){
+          moveFinished = true;
+        }
       }
-      else if(diff >= targetTurningDistance) {
-        moveFinished = true;
+      else if(moveIns.distance < 0) { //Drive backwards
+        if (distance > moveIns.distance){
+          motor.steer(stop);   //This is only to make sure turningOffset is 0
+          motor.steer(backward,moveIns.speed);
+          motor.turningRadius = moveIns.radius;
+        }
+        else if(distance <= moveIns.distance){
+          moveFinished = true;
+        }
       }
     }
-    else if(targetTurningDistance < 0) { //spin left
-      if(diff > targetTurningDistance) {
-        motor.steer(left,moveIns.speed);
+    else if(moveIns.moveType == spin) {
+      int32_t rightwheelpos = motor.readRightEncoder() - startLeftvalue;
+      int32_t leftwheelpos = motor.readLeftEncoder() - startRightvalue;
+      
+      float leftdistance = -leftwheelpos*circumference/(pulses*2); //the position is negative when driving forwards and positive when driving backwards
+      float rightdistance = -rightwheelpos*circumference/(pulses*2);
+
+      float diff = leftdistance - rightdistance;
+
+      if(targetTurningDistance > 0) { //spin right
+        if(diff < targetTurningDistance){
+          motor.steer(right,moveIns.speed);
+        }
+        else if(diff >= targetTurningDistance) {
+          moveFinished = true;
+        }
       }
-      else if (diff <= targetTurningDistance) {
+      else if(targetTurningDistance < 0) { //spin left
+        if(diff > targetTurningDistance) {
+          motor.steer(left,moveIns.speed);
+        }
+        else if (diff <= targetTurningDistance) {
+          moveFinished = true;
+        }
+      }
+      else {
         moveFinished = true;
       }
-    }
-    else {
-      moveFinished = true;
     }
   }
   if(moveFinished){
@@ -592,6 +597,18 @@ int16_t Controller::getXposDiff(int16_t object1, int16_t object2){
   int16_t xPos1 = pixy.blocks[objectIndex[object1]].x;
   int16_t xPos2 = pixy.blocks[objectIndex[object2]].x;
   return abs(xPos1-xPos2);
+}
+
+void Controller::resetValues(){
+  task = search;
+  centered = false;
+  getNewMove = true;
+  clearInstructionQueue();
+  startLeftvalue = 0;
+  startRightvalue = 0;
+  targetTurningDistance = 0;
+  taskTimer = 0;
+  pixyTimer = 0;
 }
 
 

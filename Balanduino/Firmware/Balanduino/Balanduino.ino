@@ -90,7 +90,7 @@ void loop() {
   }
   else{
     motor.steer(stop);
-    //controller.clearInstructionQueue();
+    controller.resetValues();
   }
 
   //Serial.print(motor.accAngle);Serial.print('\t');Serial.print(motor.gyroAngle);Serial.print('\t');Serial.println(motor.pitch);
