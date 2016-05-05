@@ -444,11 +444,24 @@ void Controller::calculateTrajectory(){
   double b = objectDistance[BALL];
   double c = objectDistance[GOAL2];
   //double phi = acos((sq(d)+sq(b)-sq(c))/(2.0*d*b)); //cosinussatsen
-  double phi = pi - asin(c*sin(abs(alpha))/d); //sinussatsen
+  double phi = pi - asin(c*sin(abs(alpha))/d); //sinussatsen, går att välja alltid trubbig vinkel
 
-  double theta = 2*pi - 2*phi;
-  double r = b/(2*sin(theta/2.0));
+  double theta = 2.0*pi - 2.0*phi;
+  double r = b/(2.0*sin(theta/2.0));
   double l = r * theta;
+
+  double e = 30.0; // how far away from the ball the robot should be aligned shoting at the goal
+  double b2 = sqrt(sq(b) + sq(e) + 2.0*b*e*cos(phi)); // cos(pi-phi) = -cos(phi)
+  double phi2 = pi - asin(b*sin(phi)/b2); // sin(pi-phi) = sin(phi)
+  double r2 = b2 / (2.0*sin(phi2));
+  double l2 = r2 * 2.0 * (pi - phi2);
+  double gamma = phi - phi2;
+  double theta2 = 2.0*pi - 2.0*phi2; 
+
+  if (alpha > 0) 
+    beta = beta + gamma;
+  else if (alpha < 0)
+    beta = beta - gamma;
 
   Serial.print(" Alpha:");
   Serial.print(alpha*(180.0/3.14));
@@ -456,51 +469,58 @@ void Controller::calculateTrajectory(){
   Serial.print(beta*(180/pi));
   Serial.print(" Phi:");
   Serial.print(phi*(180.0/3.14));
-  // Serial.print(" Phi2:");
-  // Serial.println(phi2*(180.0/3.14));
+  Serial.print(" Phi2:");
+  Serial.println(phi2*(180.0/3.14));
+  
 
   Serial.print(" Theta:");
   Serial.print(theta*(180.0/3.14));
+  Serial.print(" Theta2:");
+  Serial.print(theta2*(180.0/3.14));
   Serial.print(" r:");
   Serial.print(r);
+  Serial.print(" r2:");
+  Serial.println(r2);
   Serial.print(" l:");
   Serial.println(l);
+  Serial.print(" l2:");
+  Serial.println(l2);
 
   MoveInstruction m;
   if(alpha > 0 && beta < 0) { //Ball to the right of goal and left of robot
-    double angle = theta/2.0 - abs(beta);
+    double angle = theta2/2.0 - abs(beta);
     angle = angle*0.7;
     m = MoveInstruction(spin,30,angle*(180/pi));
     moveInstructionQueue.push(m); 
     
-    m = MoveInstruction(line, l, -r,25);
+    m = MoveInstruction(line, l2, -r2,25);
     moveInstructionQueue.push(m);
   }
   else if(alpha < 0 && beta > 0) { //Ball to the left of goal and right of robot
-    double angle = -(theta/2.0 - abs(beta));
+    double angle = -(theta2/2.0 - abs(beta));
     angle = angle*0.7;
     m = MoveInstruction(spin,30,angle*(180/pi));
     moveInstructionQueue.push(m); 
     
-    m = MoveInstruction(line, l, r,25);
+    m = MoveInstruction(line, l2, r2,25);
     moveInstructionQueue.push(m);
   }
   else if(alpha > 0 && beta > 0) { //Ball to the right of goal and right of robot
-    double angle = theta/2.0 + abs(beta);
+    double angle = theta2/2.0 + abs(beta);
     angle = angle*0.7;
     m = MoveInstruction(spin,30, angle*(180/pi));
     moveInstructionQueue.push(m); 
     
-    m = MoveInstruction(line, l, -r,25);
+    m = MoveInstruction(line, l2, -r2,25);
     moveInstructionQueue.push(m);
   }
   else if(alpha < 0 && beta < 0) { //Ball to the left of goal and left of robot
-    double angle = -(theta/2.0 + abs(beta));
+    double angle = -(theta2/2.0 + abs(beta));
     angle = angle*0.7;
     m = MoveInstruction(spin,30,angle*(180/pi));
     moveInstructionQueue.push(m); 
     
-    m = MoveInstruction(line, l, r,25);
+    m = MoveInstruction(line, l2, r2,25);
     moveInstructionQueue.push(m);
   }
 }
