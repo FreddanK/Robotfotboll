@@ -53,10 +53,10 @@ private:
 	Motor& motor;
 	Pixy& pixy;
 
+  Task task = search;
+
   int16_t objectIndex[6];
   float objectDistance[6];
-
-	Task task = search;
 
   bool centered=false;
 
@@ -66,7 +66,8 @@ private:
   uint16_t lastXPosBall;
   uint16_t lastXPosGoal;
 
-  
+  QueueList <MoveInstruction> moveInstructionQueue;
+  bool getNewMove = true;
 
   int32_t startLeftvalue = 0;
   int32_t startRightvalue = 0;
@@ -80,8 +81,6 @@ private:
 
 
 public:
-  bool getNewMove = true;
-  QueueList <MoveInstruction> moveInstructionQueue;
 	Controller(Motor& m, Pixy& p) : motor(m), pixy(p) {}
 
   void doTask();
@@ -108,6 +107,7 @@ public:
   double distanceBetween(int16_t object1, int16_t object2);
   int16_t getXposDiff(int16_t object1, int16_t object2);
 
+  void resetValues();
   void tiltServo();
 
 };
