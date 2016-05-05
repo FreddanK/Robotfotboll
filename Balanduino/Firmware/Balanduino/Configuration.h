@@ -15,6 +15,7 @@ and how they have been taught to Pixy.
 #ifndef _configuration_h_
 #define _configuration_h_
 
+const bool GOALKEEPER = true;
 
 //These constants holds the indexes for each object in
 //the arrays 'objectIndex' and 'objectDistance'.

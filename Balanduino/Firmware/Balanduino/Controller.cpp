@@ -32,7 +32,12 @@ void Controller::doTask() {
     if(isVisible(GOAL2)){
       lastXPosGoal=pixy.blocks[objectIndex[GOAL2]].x;
     }
-    task = makeDecision(blocksCount, task);
+    if(!GOALKEEPER){
+      task = makeDecision(blocksCount, task);
+    }
+    else{
+      task=makeDecisionGoalie(blocksCount, task);
+    }
   }
   
   if(task == search) {
@@ -40,6 +45,9 @@ void Controller::doTask() {
   }
   else if(task == goToBall) {
     goToObject(BALL);
+  }
+  else if(task == goToGoal){
+    goToObject(GOAL2);
   }
   else if(task == kick) {
     kickBall();
@@ -75,6 +83,9 @@ void Controller::doTask() {
     else
       encoderMove();
   }
+  else if(task==stay){
+    motor.steer(stop,0);
+  }
   else {
     motor.steer(stop,0);
   }
@@ -109,6 +120,33 @@ Task Controller::makeDecision(uint16_t actualBlocks, Task lastTask) {
     if(nextTask != avoid){
       nextTask = lastTask;
     }
+  }
+
+  //Return next task, reset taskTimer if task has been changed
+  if(nextTask != lastTask){
+    taskTimer = millis();
+  }
+  return nextTask;
+}
+
+
+Task Controller::makeDecisionGoalie(uint16_t actualBlocks, Task lastTask) {
+  Task nextTask = stay;
+
+  //Set task depending on what pixy sees
+  if(actualBlocks) {
+    if(isVisible(BALL) && objectDistance[BALL] < 120) {
+      nextTask = goToBall;
+    }
+    else if(isVisible(GOAL2) && objectDistance[GOAL2] < 120){
+      task = search;
+    }
+  }
+
+  //Set task depending on lastTask and nextTask
+  if(kicked || lastTask == goToGoal){
+    nextTask = goToGoal;
+    kicked=false;
   }
 
   //Return next task, reset taskTimer if task has been changed
@@ -190,6 +228,7 @@ void Controller::kickBall() {
     motor.steer(stop);
     task=search;
     centered=false;
+    kicked=true;
   }
 }
 

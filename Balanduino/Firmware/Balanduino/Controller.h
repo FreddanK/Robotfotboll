@@ -24,9 +24,11 @@ This is for a player with an offensive role.
 
 enum Task {
 	search,
+  stay,
 	kick,
 	avoid,
 	goToBall,
+  goToGoal,
   score,
   center,
   encMove,
@@ -59,6 +61,7 @@ private:
   float objectDistance[6];
 
   bool centered=false;
+  bool kicked=false;
 
 	uint32_t taskTimer = 0;
   uint32_t pixyTimer = 0;
@@ -85,7 +88,8 @@ public:
 
   void doTask();
   Task makeDecision(uint16_t actualBlocks, Task lastTask);
-  
+  Task makeDecisionGoalie(uint16_t actualBlocks, Task lastTask);
+
   void goToObject(int object);
   void scoreGoal();
   void kickBall();

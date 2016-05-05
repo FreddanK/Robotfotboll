@@ -67,6 +67,7 @@ public:
   void getSignatureIndexes(uint16_t actualBlocks);
 
   void doTask();
+
   void goToObject(int object);
   void goalKeeper(int object);
   void kickBall();
