@@ -1,69 +1,43 @@
+/*
+Developed by bachelor project SSYX02-1613.
+
+This software may be distributed and modified under the terms of the GNU
+General Public License version 2 (GPL2) as published by the Free Software
+Foundation and appearing in the file GPL2.TXT included in the packaging of
+this file. Please note that GPL2 Section 2[b] requires that all works based
+on this software must also be made publicly available under the terms of
+the GPL2 ("Copyleft").
+*/
+
 #include "Controller.h"
 
 #include <Arduino.h>
 
 #include "Motor.h"
-
-//Object, Index
-#define BALL 0  //Signature 1 (Ball)
-#define GOAL1 1 //Signature 45(octal) 90 < theta <= 180 and -180 <= theta <-90 (Own goal)
-#define GOAL2 2 //Signature 45(octal) -90 < theta < 90 (Opponents goal, yellow(left) blue(right))
-#define PLAYER1 3 //Signature 23(octal) -180 < theta < 0  (Team member)
-#define PLAYER2 4 //Signature 23(octal) 0 < theta < 180 (Opponent, purple(top) green(bottom)
-#define EDGE 5 //NA
+#include "Configuration.h"
 
 
 void Controller::doTask() {
   
   uint16_t blocksCount = pixy.getBlocks();
+
+  uint32_t updateTimer = millis() - pixyTimer;
   
-  //Get the time since pixy last saw an object
-  uint32_t updateTimer = millis()-pixyTimer;
-  //if pixy sees an object the timer needs to be reset
-  
-  if (blocksCount){
+  if (blocksCount || updateTimer > 25){
     pixyTimer = millis();
     getSignatureIndexes(blocksCount);
     if(isVisible(BALL)){
       lastXPosBall=pixy.blocks[objectIndex[BALL]].x;
       lastXPosGoal=pixy.blocks[objectIndex[GOAL2]].x;
     }
+    task = makeDecision(blocksCount, task);
   }
-  //if pixy sees at least two objects, check the distance
-  //between the ball and goal to determine which function to call
   
   if(task == search) {
-    //Pixys update frequency is 50Hz = 20ms
-    //Assume pixy sees something if blocksCount > 0
-    //or if it was less than 25ms since it last saw an object.
-    //(It needs to be a little higher than 20ms, otherwise there is
-    //a chance of missing an object.)
-    if(blocksCount || updateTimer<25) {
-      if(isVisible(BALL)){
-        goToObject(BALL);
-      }
-      else {
-        findBall(); 
-      }
-    }
-    //This delay is to make the robot stop properly.
-    //Without it the robot is very unstable when an object suddently
-    //goes out of sight.
-    //else if(updateTimer>=25 && updateTimer < 1500) {
-    //  motor.steer(stop);
-    //}
-    else {
-      //Search for objects in the direction where the last
-      //seen object went out of sight.
-      uint16_t xPos = pixy.blocks[0].x;
-
-      if(xPos<120){
-        motor.steer(left,20);
-      }
-      else if(xPos>200){
-        motor.steer(right,20);
-      }
-    }
+    findBall();
+  }
+  else if(task == goToBall) {
+    goToObject(BALL);
   }
   else if(task == kick) {
     kickBall();
@@ -93,9 +67,54 @@ void Controller::doTask() {
   else if(task == center){
     centerBall(); 
   }
+  else if(task == encMove) {
+    if(getNewMove == true)
+      setupEncoderMove();
+    else
+      encoderMove();
+  }
   else {
     motor.steer(stop,0);
   }
+}
+
+Task Controller::makeDecision(uint16_t actualBlocks, Task lastTask) {
+  Task nextTask = search;
+
+  //Set task depending on what pixy sees
+  if(actualBlocks) {
+    if(isVisible(EDGE)){
+      if(objectDistance[EDGE] < 20) {
+        nextTask = avoid;
+      }
+    }
+    else if(isVisible(BALL) && isVisible(GOAL2)) {
+      // int16_t xDiff = getXposDiff(BALL,GOAL2);
+      // if(xDiff < 20)
+      //   nextTask = goToBall;
+      // else {
+      if(lastTask != encMove)
+        calculateTrajectory();
+      nextTask = encMove;
+      // }
+    }
+    else if(isVisible(BALL)) {
+        nextTask = goToBall;
+    }
+  }
+
+  //Set task depending on lastTask and nextTask
+  if(lastTask == kick || lastTask == encMove){
+    if(nextTask != avoid){
+      nextTask = lastTask;
+    }
+  }
+
+  //Return next task, reset taskTimer if task has been changed
+  if(nextTask != lastTask){
+    taskTimer = millis();
+  }
+  return nextTask;
 }
 
 void Controller::goToObject(int object) {
@@ -115,7 +134,6 @@ void Controller::goToObject(int object) {
   }
   else if(width>110){
     task=kick;
-    taskTimer = millis();
   }
 }
 
@@ -171,7 +189,6 @@ void Controller::kickBall() {
     motor.steer(stop);
     task=search;
     centered=false;
-    taskTimer = millis(); //unnecessary right now, but may be useful later
   }
 }
 
@@ -245,77 +262,108 @@ void Controller::findGoal(){
  }
 }
 
-void Controller::setupEncoderMove(float d, float r, float s) {
-  startValue = motor.getWheelsPosition();
-  targetDistance = d;
-  radius = r;
-  speed = s;
-}
-
-void Controller::setupEncoderSpin(float degrees, float s) {
-  startLeftvalue = motor.readRightEncoder();
-  startRightvalue = motor.readLeftEncoder();
-  targetTurningDistance = (degrees/360)*2*3.141592654*10; //The distance between the wheels on the robot is 20cm, so the radius is 20/2 = 10cm
-  rate = s;
+void Controller::setupEncoderMove() {
+  if(!moveInstructionQueue.isEmpty()) {
+    MoveInstruction moveIns = moveInstructionQueue.peek();
+    startLeftvalue = motor.readRightEncoder();
+    startRightvalue = motor.readLeftEncoder();
+    targetTurningDistance = (moveIns.degree/360)*2*3.141592654*10;
+    getNewMove = false;
+  }
+  else
+    task = search;
+  
 }
 
 void Controller::encoderMove(){
+  MoveInstruction moveIns = moveInstructionQueue.peek();
   float circumference = 30.9211; //the wheel's circumference in cm
   int32_t pulses = 1856; //number of pulses per revolation (928 for each wheel)
   
-  float position = startValue + motor.getWheelsPosition();
+  float startValue = startLeftvalue+startRightvalue;
+  float position = motor.getWheelsPosition() - startValue;
   float distance = -position*circumference/(pulses*2); //position is negative when driving forward and positive when driving backwards
+  
+  bool moveFinished = false;
 
-  if (targetDistance > 0) { //Drive forwards
-    if (distance < targetDistance-speed){
-      motor.steer(stop);   //This is only to make sure turningOffset is 0
-      motor.steer(forward,speed);
-      motor.turningRadius = radius;
+  if(moveIns.moveType == line) {
+    if (moveIns.distance >= 0) { //Drive forwards
+      if (distance < moveIns.distance){
+        motor.steer(stop);   //This is only to make sure turningOffset is 0
+        motor.steer(forward,moveIns.speed);
+        motor.turningRadius = moveIns.radius;
+      }
+      else if(distance >= moveIns.distance){
+        moveFinished = true;
+      }
     }
-    else if(distance >= targetDistance-speed){
-      motor.steer(stop);
+    else if(moveIns.distance < 0) { //Drive backwards
+      if (distance > moveIns.distance){
+        motor.steer(stop);   //This is only to make sure turningOffset is 0
+        motor.steer(backward,moveIns.speed);
+        motor.turningRadius = moveIns.radius;
+      }
+      else if(distance <= moveIns.distance){
+        moveFinished = true;
+      }
     }
   }
-  else if(targetDistance < 0) { //Drive backwards
-    if (distance > targetDistance+speed){
-      motor.steer(stop);   //This is only to make sure turningOffset is 0
-      motor.steer(backward,speed);
-      motor.turningRadius = radius;
+  else if(moveIns.moveType == spin) {
+    int32_t rightwheelpos = motor.readRightEncoder() - startLeftvalue;
+    int32_t leftwheelpos = motor.readLeftEncoder() - startRightvalue;
+    
+    float leftdistance = -leftwheelpos*circumference/(pulses*2); //the position is negative when driving forwards and positive when driving backwards
+    float rightdistance = -rightwheelpos*circumference/(pulses*2);
+
+    float diff = leftdistance - rightdistance;
+
+    if(targetTurningDistance > 0) { //spin right
+      if(diff < targetTurningDistance){
+        motor.steer(right,moveIns.speed);
+      }
+      else if(diff >= targetTurningDistance) {
+        moveFinished = true;
+      }
     }
-    else if(distance <= targetDistance+speed){
-      motor.steer(stop);
+    else if(targetTurningDistance < 0) { //spin left
+      if(diff > targetTurningDistance) {
+        motor.steer(left,moveIns.speed);
+      }
+      else if (diff <= targetTurningDistance) {
+        moveFinished = true;
+      }
     }
+    else {
+      moveFinished = true;
+    }
+  }
+  if(moveFinished){
+    motor.steer(stop);
+    moveInstructionQueue.pop();
+    getNewMove = true;
   }
 }
 
-void Controller::encoderSpin() {
+float Controller::spinCheck() {
   float circumference = 30.9211; //the wheel's circumference in cm
-  int32_t pulses = 1856; //number of pulses per revolation (928 for each wheel)
+  int32_t pulses = 1856; //number of pulses per revolation (928 for each wheel this time instead of 1826 for both)
   
-  int32_t rightwheelpos = motor.readRightEncoder() + startLeftvalue;
-  int32_t leftwheelpos = motor.readLeftEncoder() + startRightvalue;
+  int32_t rightwheelpos = motor.readRightEncoder() - startRightvalue; // To make sure you have a start value
+  int32_t leftwheelpos = motor.readLeftEncoder() - startLeftvalue;
   
-  float leftdistance = -leftwheelpos*circumference/pulses; //the position is negative when driving forwards and positive when driving backwards
-  float rightdistance = -rightwheelpos*circumference/pulses;
+  float leftdistance = -leftwheelpos*circumference/(pulses*2); //the position is negative when driving forwards and positive when driving backwards
+  float rightdistance = -rightwheelpos*circumference/(pulses*2);
 
-  if(targetTurningDistance > 0) { //spin right
-    if(rightdistance < targetTurningDistance){
-      motor.steer(right,rate);
-    }
-    else if(rightdistance >= targetTurningDistance) {
-      motor.steer(stop);
-    }
-  }
-  else if(targetTurningDistance < 0) { //spin left
-    if(rightdistance > targetTurningDistance) {
-      motor.steer(left,rate);
-    }
-    else if (rightdistance <= targetTurningDistance) {
-      motor.steer(stop);
-    }
-  }
-  else
-    motor.steer(stop);
+  float skillnadleft = rightdistance - leftdistance;
+  float skillnadright = leftdistance - rightdistance;
+ 
+
+  float turnedDegreeRight = skillnadleft * 18 / 3.141592654; // 18 från 180 grader delat på radien 10 cm
+  //int32_t turnedDegreeRight = motor.readLeftEncoder();
+  float turnedDegreeLeft = skillnadright * 18 / 3.141592654;
+  
+  float result = turnedDegreeRight;
+  return result;
 }
 
 void Controller::getSignatureIndexes(uint16_t actualBlocks) {
@@ -327,19 +375,17 @@ void Controller::getSignatureIndexes(uint16_t actualBlocks) {
     
   for(int i=0; i<actualBlocks;i++) {
     uint16_t signature = pixy.blocks[i].signature;
-    if(signature == 1) { //Ball
+    if(signature == SIGN_BALL) { //Ball
       if(objectIndex[BALL] == -1) { //only store information about the closest object
         objectIndex[BALL] = i;
-        objectDistance[BALL] = distanceToObject(pixy.blocks[i].width,12,false);
+        objectDistance[BALL] = distanceToObject(pixy.blocks[i].width,REAL_WIDTH_BALL,false);
       }
-      //Serial.print(objectSeen[BALL]);
-      //Serial.print(" Ball, ");
     }
-    else if(signature == 045){ //Opponent goal
+    else if(signature == SIGN_GOAL){ //Opponent goal
       uint16_t angle = pixy.blocks[i].angle; //TODO, angle doesen't seem to update as often as the rest of the parameters from the pixy, so it is not used right now
       if(objectIndex[GOAL2] == -1) { //only store information about the closest object
         objectIndex[GOAL2] = i;
-        objectDistance[GOAL2] = distanceToObject(pixy.blocks[i].width,100,false);
+        objectDistance[GOAL2] = distanceToObject(pixy.blocks[i].width,REAL_WIDTH_GOAL,false);
       }
       /*
       if(90<angle && angle<=180 || -180<=angle && angle<-90){
@@ -350,11 +396,11 @@ void Controller::getSignatureIndexes(uint16_t actualBlocks) {
       }
       */
     }
-    else if(signature = 023) {  //Opponent player
+    else if(signature = SIGN_PLAYER) {  //Opponent player
       uint16_t angle = pixy.blocks[i].angle; //TODO, angle doesen't seem to update as often as the rest of the parameters from the pixy, so it is not used right now
       if(objectIndex[PLAYER2] == -1) { //only store information about the closest object
         objectIndex[PLAYER2] = i;
-        objectDistance[PLAYER2] = distanceToObject(pixy.blocks[i].height,15,true);
+        objectDistance[PLAYER2] = distanceToObject(pixy.blocks[i].height,REAL_HEIGHT_PLAYER,true);
       }
       /*
       if(-180<angle && angle<0){
@@ -375,6 +421,69 @@ bool Controller::isVisible(int object) {
   else return false;
 }
 
+void Controller::calculateTrajectory(){
+  while(!moveInstructionQueue.isEmpty()) //Empty the queue before filling it
+    moveInstructionQueue.pop();
+
+  int16_t xPosGOAL= pixy.blocks[objectIndex[GOAL2]].x;
+  int16_t xPosBALL= pixy.blocks[objectIndex[BALL]].x;
+  Serial.print("XPosBall:");
+  Serial.print(xPosBALL);
+  Serial.print(" XPosGOAL:");
+  Serial.print(xPosGOAL);
+  Serial.print(" Distance to ball:");
+  Serial.print(objectDistance[BALL]);
+  Serial.print(" Distance to goal:");
+  Serial.println(objectDistance[GOAL2]);
+  
+  float alpha = ((xPosBALL-xPosGOAL)/320.0)*75.0*(3.1415/180.0);
+  float d = distanceBetween(BALL, GOAL2);
+  float b = objectDistance[BALL];
+  float c = objectDistance[GOAL2];
+  float phi = acos((sq(d)+sq(b)-sq(c))/(2.0*d*b));
+ 
+
+  Serial.print(" Alpha:");
+  Serial.print(alpha*(180.0/3.14));
+  Serial.print(" d:");
+  Serial.print(d);
+  Serial.print(" Phi:");
+  Serial.println(phi*(180.0/3.14));
+
+  MoveInstruction m;
+  if(alpha > 0) {
+    m = MoveInstruction(spin,30,phi*(180/3.1415));
+    moveInstructionQueue.push(m); 
+    
+    m = MoveInstruction(line, abs(3.1415*b*sin(phi)/2.0),-b*sin(phi)/2.0,25);
+    moveInstructionQueue.push(m);
+  }
+  else if(alpha < 0) {
+    m = MoveInstruction(spin,30,-phi*(180/3.1415));
+    moveInstructionQueue.push(m); 
+    
+    m = MoveInstruction(line, abs(3.1415*b*sin(phi)/2.0),b*sin(phi)/2.0,25);
+    moveInstructionQueue.push(m);
+  }
+
+  // MoveInstruction m;
+  // m = MoveInstruction(spin,30,xPosBALL-xPosGOAL);
+  // moveInstructionQueue.push(m);
+
+  // m = MoveInstruction(line,20,0.25);
+  // moveInstructionQueue.push(m);
+
+  // m = MoveInstruction(spin,20,phi*180/3.1415);
+  // moveInstructionQueue.push(m);
+  
+  // m = MoveInstruction(line,50,0,25);
+  // moveInstructionQueue.push(m);   
+  
+  // m = MoveInstruction(line,150,50,20);
+  // moveInstructionQueue.push(m); 
+}
+
+
 //Takes the object's size in pixels and converts it to distance in cm.
 //Arguments: the object's size (pixels), real size of the object (cm) and an extra argument
 //that is true if you want to measure the distance based on the heigth instead of the width.
@@ -394,21 +503,21 @@ float Controller::distanceToObject(int object_size, float real_size, bool measur
 //Calculates the distance between two objects
 //Example of use: float var = distanceBetween(BALL,PLAYER2);
 float Controller::distanceBetween(int16_t object1, int16_t object2) {
-  uint16_t xPos1 = pixy.blocks[objectIndex[object1]].x;
-  uint16_t xPos2 = pixy.blocks[objectIndex[object2]].x;
+  int16_t xPos1 = pixy.blocks[objectIndex[object1]].x;
+  int16_t xPos2 = pixy.blocks[objectIndex[object2]].x;
   float d1 = objectDistance[object1];
   float d2 = objectDistance[object2];
-  float image_width = 320; //pixels
-  float fov = 75*3.141592654/180; //field of view, degrees
+  float image_width = 320.0; //pixels
+  float fov = 75.0*3.141592654/180; //field of view, degrees
 
-  return sqrt(sq(d1)+sq(d2)-2*d1*d2*cos((abs(xPos1-xPos2)/image_width)*fov)); 
+  return sqrt(sq(d1)+sq(d2)-2.0*d1*d2*cos((abs(xPos1-xPos2)/image_width)*fov)); 
 }
 
 //Calculates and returns difference in x-position for two objects
 int16_t Controller::getXposDiff(int16_t object1, int16_t object2){
-  uint16_t xPos1 = pixy.blocks[objectIndex[object1]].x;
-  uint16_t xPos2 = pixy.blocks[objectIndex[object2]].x;
-  return abs(xPos1-xPos1);
+  int16_t xPos1 = pixy.blocks[objectIndex[object1]].x;
+  int16_t xPos2 = pixy.blocks[objectIndex[object2]].x;
+  return abs(xPos1-xPos2);
 }
 
 
