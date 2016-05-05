@@ -31,6 +31,7 @@ Motor motor{};
 Eeprom eeprom{&motor};
 Pixy pixy{};
 Controller controller{motor, pixy};
+//ControllerGoal controllerGoal{motor,pixy}; //when running goalkeeper
 Tools tools{&motor, &eeprom};
 Bluetooth bluetooth{&motor, &tools};
 Microphone microphone{};
@@ -84,8 +85,9 @@ void loop() {
 
   microphone.readMic();
   if(microphone.robotOn)
-    controller.doTask();
-  else{
+    controller.doTask(); //when running offensive player
+    //controllerGoal.doTask(); //when running goalkeeper
+  else
     motor.steer(stop);
     //controller.clearInstructionQueue();
   }

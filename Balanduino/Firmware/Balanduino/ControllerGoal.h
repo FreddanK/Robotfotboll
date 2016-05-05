@@ -80,6 +80,7 @@ public:
   void encoderSpin();
 
   bool isVisible(int object);
+  bool hasKicked;
 
   void getPixelDistance();
 

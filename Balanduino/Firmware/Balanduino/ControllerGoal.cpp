@@ -1,21 +1,8 @@
-/*
-Developed by bachelor project SSYX02-1613.
-
-This software may be distributed and modified under the terms of the GNU
-General Public License version 2 (GPL2) as published by the Free Software
-Foundation and appearing in the file GPL2.TXT included in the packaging of
-this file. Please note that GPL2 Section 2[b] requires that all works based
-on this software must also be made publicly available under the terms of
-the GPL2 ("Copyleft").
-*/
-
 #include "ControllerGoal.h"
-
 #include <Arduino.h>
-
 #include "Motor.h"
-
 //Object, Index
+
 #define BALL 0  //Signature 1 (Ball)
 #define GOAL1 1 //Signature 45(octal) 90 < theta <= 180 and -180 <= theta <-90 (Own goal)
 #define GOAL2 2 //Signature 45(octal) -90 < theta < 90 (Opponents goal, yellow(left) blue(right))
@@ -30,7 +17,6 @@ void ControllerGoal::doTask() {
   //Get the time since pixy last saw an object
   uint32_t updateTimer = millis()-pixyTimer;
   //if pixy sees an object the timer needs to be reset
-
   if (blocksCount>0){
     pixyTimer = millis();
     getSignatureIndexes(blocksCount);
@@ -38,7 +24,6 @@ void ControllerGoal::doTask() {
       lastXPosBall=pixy.blocks[objectIndex[BALL]].x;
     }
   }
-
   if(task == search) {
     //Pixys update frequency is 50Hz = 20ms
     //Assume pixy sees something if blocksCount > 0
@@ -51,13 +36,12 @@ void ControllerGoal::doTask() {
       }
       else{
         motor.steer(stop);
-        }
       }
+    }
     else {
       //Search for objects in the direction where the last
       //seen object went out of sight.
-      uint16_t xPos = pixy.blocks[0].x;
-
+      uint16_t xPos = pixy.blocks[objectIndex[BALL]].x;
       if(xPos<120){
         motor.steer(left,20);
         motor.steer(forward, 5);
@@ -95,35 +79,31 @@ void ControllerGoal::goalKeeper(int object) {
   uint16_t width = pixy.blocks[object].width;
   float distanceToBall = objectDistance[BALL];
   float dist;
-  
-
-  if(hasKicked == true && distanceToBall > 200){
-    task = findgoal;
-    hasKicked = false;
-    }
-
-  if(distanceToBall >= 100){
-      motor.steer(stop);
-    }
-  
-  else{
-     if(isVisible(PLAYER2)){
-     dist = (distanceBetween(BALL, PLAYER2));
-        if(dist >= 100){              
-          task = gotoball; 
-          hasKicked = true;            
-        }
-        else if(dist < 100){
-        motor.steer(stop);
-       }
+  if(distanceToBall > 150){
+    if(hasKicked){
+      goToObject(GOAL1);
+      hasKicked = false;
     }
     else{
-        task = gotoball;
-        hasKicked = true;
-     }
+      motor.steer(stop);
+    }
+  }  
+  else if(isVisible(PLAYER2) && isVisible(BALL)){
+    dist = (distanceBetween(BALL, PLAYER2));
+    if(dist > 150){              
+      goToObject(BALL);             
+    }
+    else{
+    motor.steer(stop);
+    }
+  }
+  else if(isVisible(BALL)){
+      goToObject(BALL);
+  }
+  else{
+    motor.steer(stop);
   }
 }
-
 
 bool ControllerGoal::isVisible(int object) {
   if(objectIndex[object]!=-1){
@@ -132,12 +112,9 @@ bool ControllerGoal::isVisible(int object) {
   else return false;
 }
 
-
-
 void ControllerGoal::goToObject(int object) {
   uint16_t xPos = pixy.blocks[objectIndex[object]].x;
   uint16_t width = pixy.blocks[objectIndex[object]].width;
-
   if(xPos<120){
     motor.steer(left,20);
     motor.steer(forward,5);
@@ -146,10 +123,13 @@ void ControllerGoal::goToObject(int object) {
     motor.steer(right,20);
     motor.steer(forward,5);
   }
-  else if(width > 10 && width < 110){
+  else if(width > 10 && width < 100){
     motor.steer(forward,20);
+ }
+  else if(width<100){
     if(object == BALL){
        task = kick;
+       hasKicked=true;
     }
     else{
       motor.steer(stop);
@@ -185,6 +165,7 @@ void ControllerGoal::findBall(){
   motor.steer(stop);
  }
 }
+
 void ControllerGoal::findGoal(){
   if(lastXPosGoal<120){
     motor.steer(left,20);
@@ -199,6 +180,7 @@ void ControllerGoal::findGoal(){
   task = gotogoal;
  }
 }
+
 void ControllerGoal::getSignatureIndexes(uint16_t actualBlocks) {
   
   for(int i=0; i<6;i++){
@@ -248,6 +230,7 @@ void ControllerGoal::getSignatureIndexes(uint16_t actualBlocks) {
     }
   }
 }
+
 //Takes the object's size in pixels and converts it to distance in cm.
 //Arguments: the object's size (pixels), real size of the object (cm) and an extra argument
 //that is true if you want to measure the distance based on the heigth instead of the width.
@@ -272,7 +255,6 @@ float ControllerGoal::distanceBetween(int16_t object1, int16_t object2) {
   float d2 = objectDistance[object2];
   float image_width = 320; //pixels
   float fov = 75*3.141592654/180; //field of view, degrees
-
   return sqrt(sq(d1)+sq(d2)-2*d1*d2*cos((abs(xPos1-xPos2)/image_width)*fov)); 
 }
 
@@ -323,4 +305,3 @@ void ControllerGoal::findObject(int object){
     motor.steer(stop);
   }
 }
-
