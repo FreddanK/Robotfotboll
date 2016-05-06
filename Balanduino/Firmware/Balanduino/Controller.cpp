@@ -138,15 +138,18 @@ Task Controller::makeDecisionGoalie(uint16_t actualBlocks, Task lastTask) {
     if(isVisible(BALL) && objectDistance[BALL] < 120) {
       nextTask = goToBall;
     }
-    else if(isVisible(GOAL2) && objectDistance[GOAL2] < 120){
-      task = search;
-    }
+    // else if(isVisible(GOAL2) && objectDistance[GOAL2] < 120){
+    //   task = search;
+    // }
   }
 
-  //Set task depending on lastTask and nextTask
-  if(kicked || lastTask == goToGoal){
+  //Set task depending on lastTask
+  if(lastTask == goToGoal && objectDistance[GOAL2] <120){
+    nextTask = search;
+  }
+  else if(lastTask == search || lastTask == goToGoal){
     nextTask = goToGoal;
-    kicked=false;
+    //kicked=false;
   }
 
   //Return next task, reset taskTimer if task has been changed
