@@ -49,6 +49,9 @@ void Controller::doTask() {
   else if(task == goToGoal){
     goToObject(GOAL2);
   }
+  else if(task == findB){
+    findBall();
+  }
   else if(task == kick) {
     kickBall();
   }
@@ -135,21 +138,18 @@ Task Controller::makeDecisionGoalie(uint16_t actualBlocks, Task lastTask) {
 
   //Set task depending on what pixy sees
   if(actualBlocks) {
-    if(isVisible(BALL) && objectDistance[BALL] < 120) {
+    if(isVisible(BALL) && objectDistance[BALL] < 80) {
       nextTask = goToBall;
     }
-    // else if(isVisible(GOAL2) && objectDistance[GOAL2] < 120){
-    //   task = search;
-    // }
+
+    if(isVisible(GOAL2) && objectDistance[GOAL2] < 200){
+      nextTask = findB;
+    }
   }
 
   //Set task depending on lastTask
-  if(lastTask == goToGoal && objectDistance[GOAL2] <120){
-    nextTask = search;
-  }
-  else if(lastTask == search || lastTask == goToGoal){
+  if(lastTask == search || lastTask == goToGoal){
     nextTask = goToGoal;
-    //kicked=false;
   }
 
   //Return next task, reset taskTimer if task has been changed
@@ -176,8 +176,10 @@ void Controller::goToObject(int object) {
   }
   else if(width>110){
     task=kick;
+    taskTimer=millis();
   }
 }
+
 
 //adjust and centers both ball and goal to get
 //into "goal scoring position".
@@ -231,7 +233,6 @@ void Controller::kickBall() {
     motor.steer(stop);
     task=search;
     centered=false;
-    kicked=true;
   }
 }
 
@@ -281,6 +282,7 @@ void Controller::centerBall(){
   }
 }
 
+//Turn towards where the ball is
 void Controller::findBall(){ 
  if(lastXPosBall<120){
   motor.steer(left,20);

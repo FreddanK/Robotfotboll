@@ -29,6 +29,7 @@ enum Task {
 	avoid,
 	goToBall,
   goToGoal,
+  findB,
   score,
   center,
   encMove,
@@ -61,7 +62,7 @@ private:
   float objectDistance[6];
 
   bool centered=false;
-  bool kicked=false;
+  bool kicked = false;
 
 	uint32_t taskTimer = 0;
   uint32_t pixyTimer = 0;
