@@ -33,7 +33,7 @@ const int SIGN_EDGE = 067;
 
 //These constants holds the real with in cm for all objects.
 const int REAL_WIDTH_BALL = 14;
-const int REAL_WIDTH_GOAL = 64;
+const int REAL_HEIGHT_GOAL = 47;
 const int REAL_HEIGHT_PLAYER = 15;
 
 

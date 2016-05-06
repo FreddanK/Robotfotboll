@@ -91,10 +91,16 @@ Task Controller::makeDecision(uint16_t actualBlocks, Task lastTask) {
       }
     }
     else if(isVisible(BALL) && isVisible(GOAL2)) {
-
-      if(lastTask != encMove)
-        calculateTrajectory();
-      nextTask = encMove;
+      int16_t diff = getXposDiff(BALL, GOAL2);
+      if(diff < 30){
+        nextTask = goToBall;
+      }
+      else{
+        if(lastTask != encMove){
+          calculateTrajectory();
+        }
+        nextTask = encMove;
+      }
     }
     else if(isVisible(BALL)) {
       nextTask = goToBall;
@@ -123,15 +129,15 @@ void Controller::goToObject(int object) {
   uint16_t width = pixy.blocks[objectIndex[object]].width;
   
   if(xPos<120){
-    motor.steer(left,20);
+    motor.steer(left,30);
     motor.steer(forward,5);
   }
   else if(xPos>200){
-    motor.steer(right,20);
+    motor.steer(right,30);
     motor.steer(forward,5);
   }
   else if(width > 10 && width < 110){
-    motor.steer(forward,20);
+    motor.steer(forward,30);
   }
   else if(width>110){
     task=kick;
@@ -399,7 +405,7 @@ void Controller::getSignatureIndexes(uint16_t actualBlocks) {
       uint16_t angle = pixy.blocks[i].angle; //TODO, angle doesen't seem to update as often as the rest of the parameters from the pixy, so it is not used right now
       if(objectIndex[GOAL2] == -1) { //only store information about the closest object
         objectIndex[GOAL2] = i;
-        objectDistance[GOAL2] = distanceToObject(pixy.blocks[i].width,REAL_WIDTH_GOAL,false);
+        objectDistance[GOAL2] = distanceToObject(pixy.blocks[i].height,REAL_HEIGHT_GOAL,true);
       }
       /*
       if(90<angle && angle<=180 || -180<=angle && angle<-90){
@@ -459,7 +465,7 @@ void Controller::calculateTrajectory(){
   double b2 = sqrt(sq(b) + sq(e) + 2.0*b*e*cos(phi)); // cos(pi-phi) = -cos(phi)
   double phi2 = pi - asin(b*sin(phi)/b2); // sin(pi-phi) = sin(phi)
   double r2 = b2 / (2.0*sin(phi2));
-  double l2 = r2 * 2.0 * (pi - phi2);
+  double l2 = r2 * 2.0 * (pi - phi2)*0.7;
   double gamma = phi - phi2;
   double theta2 = 2.0*pi - 2.0*phi2; 
 
@@ -468,6 +474,12 @@ void Controller::calculateTrajectory(){
   else if (alpha < 0)
     beta = beta - gamma;
 
+  if(l2 > 200) {
+    l2 = l2*0.5;
+  }
+  if(r2 < 20) {
+    r2 = 20;
+  }
   Serial.print(" Alpha:");
   Serial.print(alpha*(180.0/3.14));
   Serial.print(" Beta:");
@@ -494,38 +506,38 @@ void Controller::calculateTrajectory(){
   MoveInstruction m;
   if(alpha > 0 && beta < 0) { //Ball to the right of goal and left of robot
     double angle = theta2/2.0 - abs(beta);
-    angle = angle*0.7;
+    angle = angle*0.8;
     m = MoveInstruction(spin,30,angle*(180/pi));
     moveInstructionQueue.push(m); 
     
-    m = MoveInstruction(line, l2, -r2,25);
+    m = MoveInstruction(line, l2, -r2,30);
     moveInstructionQueue.push(m);
   }
   else if(alpha < 0 && beta > 0) { //Ball to the left of goal and right of robot
     double angle = -(theta2/2.0 - abs(beta));
-    angle = angle*0.7;
+    angle = angle*0.8;
     m = MoveInstruction(spin,30,angle*(180/pi));
     moveInstructionQueue.push(m); 
     
-    m = MoveInstruction(line, l2, r2,25);
+    m = MoveInstruction(line, l2, r2,30);
     moveInstructionQueue.push(m);
   }
   else if(alpha > 0 && beta > 0) { //Ball to the right of goal and right of robot
     double angle = theta2/2.0 + abs(beta);
-    angle = angle*0.7;
+    angle = angle*0.8;
     m = MoveInstruction(spin,30, angle*(180/pi));
     moveInstructionQueue.push(m); 
     
-    m = MoveInstruction(line, l2, -r2,25);
+    m = MoveInstruction(line, l2, -r2,30);
     moveInstructionQueue.push(m);
   }
   else if(alpha < 0 && beta < 0) { //Ball to the left of goal and left of robot
     double angle = -(theta2/2.0 + abs(beta));
-    angle = angle*0.7;
+    angle = angle*0.8;
     m = MoveInstruction(spin,30,angle*(180/pi));
     moveInstructionQueue.push(m); 
     
-    m = MoveInstruction(line, l2, r2,25);
+    m = MoveInstruction(line, l2, r2,30);
     moveInstructionQueue.push(m);
   }
 }
