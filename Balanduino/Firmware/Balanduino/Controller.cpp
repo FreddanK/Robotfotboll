@@ -136,14 +136,19 @@ Task Controller::makeDecision(uint16_t actualBlocks, Task lastTask) {
 Task Controller::makeDecisionGoalie(uint16_t actualBlocks, Task lastTask) {
   Task nextTask = stay;
 
+  if(lastTask == findB){
+    nextTask = findB;
+  }
+
   //Set task depending on what pixy sees
   if(actualBlocks) {
-    if(isVisible(BALL) && objectDistance[BALL] < 80) {
-      nextTask = goToBall;
-    }
 
     if(isVisible(GOAL2) && objectDistance[GOAL2] < 200){
       nextTask = findB;
+    }
+
+    if(isVisible(BALL) && objectDistance[BALL] < 80) {
+      nextTask = goToBall;
     }
   }
 
