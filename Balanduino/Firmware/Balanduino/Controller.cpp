@@ -32,7 +32,12 @@ void Controller::doTask() {
     if(isVisible(GOAL2)){
       lastXPosGoal=pixy.blocks[objectIndex[GOAL2]].x;
     }
-    task = makeDecision(blocksCount, task);
+    if(!GOALKEEPER){
+      task = makeDecision(blocksCount, task);
+    }
+    else{
+      task=makeDecisionGoalie(blocksCount, task);
+    }
   }
   
   if(task == search) {
@@ -40,6 +45,12 @@ void Controller::doTask() {
   }
   else if(task == goToBall) {
     goToObject(BALL);
+  }
+  else if(task == goToGoal){
+    goToObject(GOAL2);
+  }
+  else if(task == findB){
+    findBall();
   }
   else if(task == kick) {
     kickBall();
@@ -74,6 +85,9 @@ void Controller::doTask() {
       setupEncoderMove();
     else
       encoderMove();
+  }
+  else if(task==stay){
+    motor.steer(stop,0);
   }
   else {
     motor.steer(stop,0);
@@ -124,6 +138,38 @@ Task Controller::makeDecision(uint16_t actualBlocks, Task lastTask) {
   return nextTask;
 }
 
+
+Task Controller::makeDecisionGoalie(uint16_t actualBlocks, Task lastTask) {
+  Task nextTask = stay;
+
+  if(lastTask == findB){
+    nextTask = findB;
+  }
+
+  //Set task depending on what pixy sees
+  if(actualBlocks) {
+
+    if(isVisible(GOAL2) && objectDistance[GOAL2] < 200){
+      nextTask = findB;
+    }
+
+    if(isVisible(BALL) && objectDistance[BALL] < 80) {
+      nextTask = goToBall;
+    }
+  }
+
+  //Set task depending on lastTask
+  if(lastTask == search || lastTask == goToGoal){
+    nextTask = goToGoal;
+  }
+
+  //Return next task, reset taskTimer if task has been changed
+  if(nextTask != lastTask){
+    taskTimer = millis();
+  }
+  return nextTask;
+}
+
 void Controller::goToObject(int object) {
   uint16_t xPos = pixy.blocks[objectIndex[object]].x;
   uint16_t width = pixy.blocks[objectIndex[object]].width;
@@ -141,8 +187,10 @@ void Controller::goToObject(int object) {
   }
   else if(width>110){
     task=kick;
+    taskTimer=millis();
   }
 }
+
 
 //adjust and centers both ball and goal to get
 //into "goal scoring position".
@@ -245,6 +293,7 @@ void Controller::centerBall(){
   }
 }
 
+//Turn towards where the ball is
 void Controller::findBall(){ 
  if(lastXPosBall<120){
   motor.steer(left,20);
