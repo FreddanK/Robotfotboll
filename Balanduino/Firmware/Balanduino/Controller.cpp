@@ -22,10 +22,13 @@ void Controller::doTask() {
   uint16_t blocksCount = pixy.getBlocks();
 
   uint32_t updateTimer = millis() - pixyTimer;
-  
+
+  //If pixy sees an object, update the stored information
+  //about the objects
   if (blocksCount || updateTimer > 25){
     pixyTimer = millis();
     getSignatureIndexes(blocksCount);
+
     if(isVisible(BALL)){
       lastXPosBall=pixy.blocks[objectIndex[BALL]].x;
     }
@@ -36,10 +39,11 @@ void Controller::doTask() {
       task = makeDecision(blocksCount, task);
     }
     else{
-      task=makeDecisionGoalie(blocksCount, task);
+      task = makeDecisionGoalkeeper(blocksCount, task);
     }
   }
   
+  //Call different functions depending on current task
   if(task == search) {
     findBall();
   }
@@ -49,33 +53,11 @@ void Controller::doTask() {
   else if(task == goToGoal){
     goToObject(GOAL2);
   }
-  else if(task == findB){
-    findBall();
-  }
   else if(task == kick) {
     kickBall();
   }
   else if(task == avoid) {
     avoidObject();
-  }
-  else if(task == score){
-    if(blocksCount || updateTimer<25) {
-      if(isVisible(BALL) && isVisible(GOAL2)){
-        scoreGoal();
-      }
-//      else if(!isVisible(BALL)){
-//        findBall();
-//      }
-//      else if(!isVisible(GOAL2)){
-//        findGoal();
-//      }
-      else{
-        motor.steer(stop);
-      }
-    }
-    else{
-      motor.steer(stop);
-    }
   }
   else if(task == center){
     centerBall(); 
@@ -86,7 +68,7 @@ void Controller::doTask() {
     else
       encoderMove();
   }
-  else if(task==stay){
+  else if(task == stay){
     motor.steer(stop,0);
   }
   else {
@@ -94,6 +76,7 @@ void Controller::doTask() {
   }
 }
 
+//Decide what the next task should be (offensive player)
 Task Controller::makeDecision(uint16_t actualBlocks, Task lastTask) {
   Task nextTask = search;
 
@@ -125,6 +108,9 @@ Task Controller::makeDecision(uint16_t actualBlocks, Task lastTask) {
   }
 
   //Set task depending on lastTask and nextTask
+
+  //kick and encMove can only be interrupted by avoid
+  //or by the functions themselves
   if(lastTask == kick || lastTask == encMove){
     if(nextTask != avoid){
       nextTask = lastTask;
@@ -139,28 +125,44 @@ Task Controller::makeDecision(uint16_t actualBlocks, Task lastTask) {
 }
 
 
-Task Controller::makeDecisionGoalie(uint16_t actualBlocks, Task lastTask) {
-  Task nextTask = stay;
-
-  if(lastTask == findB){
-    nextTask = findB;
-  }
+//Decide what the next task should be (goalkeeper)
+Task Controller::makeDecisionGoalkeeper(uint16_t actualBlocks, Task lastTask) {
+  Task nextTask = search;
 
   //Set task depending on what pixy sees
   if(actualBlocks) {
-
-    if(isVisible(GOAL2) && objectDistance[GOAL2] < 200){
-      nextTask = findB;
+    // if(isVisible(GOAL1) && objectDistance[GOAL1] < 30){
+    //   nextTask = search;
+    // }
+    if(isVisible(GOAL1) && objectDistance[GOAL1] < 100 && lastTask == goToGoal){
+      MoveInstruction m = MoveInstruction(line,70,0,20);
+      moveInstructionQueue.push(m);
+      nextTask = encMove;
     }
 
-    if(isVisible(BALL) && objectDistance[BALL] < 80) {
-      nextTask = goToBall;
+    if(isVisible(BALL)) {
+      if(objectDistance[BALL] < 80){
+        nextTask = goToBall;
+      }
+      else{
+        nextTask = stay;
+      }
     }
   }
 
   //Set task depending on lastTask
-  if(lastTask == search || lastTask == goToGoal){
+
+  if(kicked || lastTask == goToGoal){
     nextTask = goToGoal;
+    kicked = false;
+  }
+
+  //kick and encMove can only be interrupted by avoid
+  //or by the functions themselves
+  if(lastTask == kick || lastTask == encMove){
+    if(nextTask != avoid){
+      nextTask = lastTask;
+    }
   }
 
   //Return next task, reset taskTimer if task has been changed
@@ -174,61 +176,25 @@ void Controller::goToObject(int object) {
   uint16_t xPos = pixy.blocks[objectIndex[object]].x;
   uint16_t width = pixy.blocks[objectIndex[object]].width;
   
-  if(xPos<120){
+  if(xPos<130){
     motor.steer(left,30);
     motor.steer(forward,5);
   }
-  else if(xPos>200){
+  else if(xPos>190){
     motor.steer(right,30);
     motor.steer(forward,5);
   }
-  else if(width > 10 && width < 110){
+  else if(objectDistance[object] >= 30 && objectDistance[object] < 600){
     motor.steer(forward,30);
   }
-  else if(width>110){
-    task=kick;
-    taskTimer=millis();
-  }
-}
-
-
-//adjust and centers both ball and goal to get
-//into "goal scoring position".
-//sets task to kick when position is right
-void Controller::scoreGoal(){
-  uint16_t xPosBall = pixy.blocks[objectIndex[BALL]].x;
-  uint16_t xPosGoal = pixy.blocks[objectIndex[GOAL2]].x;
-  uint16_t width = pixy.blocks[objectIndex[BALL]].width;
-  //if ball is centered but still far. move forward
-  if(xPosBall>120 && xPosBall<200 && width > 10 && width < 110 && centered){
-    motor.steer(forward,20);
-  }
-  //if ball is centered and close, kick ball
-  else if(xPosBall>120 && xPosBall<200 && width>110 && centered){
-    task=kick;
-    taskTimer = millis();
-  }
-  //When the goal is far out on either of the edges in pixys field of vision
-  //while the ball is not, THEN move forward
-  else if((xPosGoal<70 && !centered) || (xPosGoal>240 && !centered)){
-    motor.steer(forward,20);
-    //if both ball and goal is far to the left or far to the right, then center ball
-    if(xPosBall<10 || xPosBall>310){
-      task=center;
+  else if(objectDistance[object] < 30){
+    if(object == BALL) {
+      task=kick;
+      taskTimer = millis(); //do not remove
     }
-  }
-  //when the ball is to the right of the goal but the goal is not dissapearing from either side
-  //of the field of vision. THEN go right
-  else if(xPosBall>xPosGoal && !centered){
-    motor.steer(right,20);
-  }
-  //when the ball is to the left of the goal but the goal is not dissapearing from either side
-  //of the field of vision. THEN go left
-  else if(xPosBall<xPosGoal && !centered){
-    motor.steer(left,20);
-  }
-  else{
-    motor.steer(stop);
+    else {
+      task = stay;
+    }
   }
 }
 
@@ -242,8 +208,8 @@ void Controller::kickBall() {
   }  
   else{
     motor.steer(stop);
-    task=search;
-    centered=false;
+    task = search;
+    kicked = true;
   }
 }
 
@@ -288,7 +254,6 @@ void Controller::centerBall(){
     motor.steer(right,20);
   }
   else{
-    task=score;
     centered=true;
   }
 }
@@ -296,10 +261,10 @@ void Controller::centerBall(){
 //Turn towards where the ball is
 void Controller::findBall(){ 
  if(lastXPosBall<120){
-  motor.steer(left,20);
+  motor.steer(left,30);
  }
  else if(lastXPosBall>200){
-  motor.steer(right,20);
+  motor.steer(right,30);
  }
  else {
   motor.steer(stop);
@@ -539,28 +504,6 @@ void Controller::calculateTrajectory(){
   if(r2 < 20) {
     r2 = 20;
   }
-  Serial.print(" Alpha:");
-  Serial.print(alpha*(180.0/3.14));
-  Serial.print(" Beta:");
-  Serial.print(beta*(180/pi));
-  Serial.print(" Phi:");
-  Serial.print(phi*(180.0/3.14));
-  Serial.print(" Phi2:");
-  Serial.println(phi2*(180.0/3.14));
-  
-
-  Serial.print(" Theta:");
-  Serial.print(theta*(180.0/3.14));
-  Serial.print(" Theta2:");
-  Serial.print(theta2*(180.0/3.14));
-  Serial.print(" r:");
-  Serial.print(r);
-  Serial.print(" r2:");
-  Serial.println(r2);
-  Serial.print(" l:");
-  Serial.println(l);
-  Serial.print(" l2:");
-  Serial.println(l2);
 
   MoveInstruction m;
   if(alpha > 0 && beta < 0) { //Ball to the right of goal and left of robot
@@ -601,39 +544,6 @@ void Controller::calculateTrajectory(){
   }
 }
 
-void Controller::calculateTrajectory2(){
-  while(!moveInstructionQueue.isEmpty()) //Empty the queue before filling it
-    moveInstructionQueue.pop();
-
-  int16_t xPosGOAL= pixy.blocks[objectIndex[GOAL2]].x;
-  int16_t xPosBALL= pixy.blocks[objectIndex[BALL]].x;
-
-  
-  float alpha = ((xPosBALL-xPosGOAL)/320.0)*75.0*(3.1415/180.0);
-  float d = distanceBetween(BALL, GOAL2);
-  float b = objectDistance[BALL];
-  float c = objectDistance[GOAL2];
-  float phi = acos((sq(d)+sq(b)-sq(c))/(2.0*d*b));
- 
-
-  MoveInstruction m;
-  if(alpha > 0) {
-    m = MoveInstruction(spin,30,phi*(180/3.1415));
-    moveInstructionQueue.push(m); 
-    
-    m = MoveInstruction(line, abs(3.1415*b*sin(phi)/2.0),-b*sin(phi)/2.0,25);
-    moveInstructionQueue.push(m);
-  }
-  else if(alpha < 0) {
-    m = MoveInstruction(spin,30,-phi*(180/3.1415));
-    moveInstructionQueue.push(m); 
-    
-    m = MoveInstruction(line, abs(3.1415*b*sin(phi)/2.0),b*sin(phi)/2.0,25);
-    moveInstructionQueue.push(m);
-  }
-}
-
-
 //Takes the object's size in pixels and converts it to distance in cm.
 //Arguments: the object's size (pixels), real size of the object (cm) and an extra argument
 //that is true if you want to measure the distance based on the heigth instead of the width.
@@ -673,6 +583,7 @@ int16_t Controller::getXposDiff(int16_t object1, int16_t object2){
 void Controller::resetValues(){
   task = search;
   centered = false;
+  kicked = true;
   getNewMove = true;
   clearInstructionQueue();
   startLeftvalue = 0;

@@ -24,15 +24,13 @@ This is for a player with an offensive role.
 
 enum Task {
 	search,
-  stay,
+  goToBall,
+  goToGoal,
 	kick,
 	avoid,
-	goToBall,
-  goToGoal,
-  findB,
-  score,
   center,
   encMove,
+  stay,
 };
 
 enum MoveType {
@@ -61,8 +59,8 @@ private:
   int16_t objectIndex[6];
   float objectDistance[6];
 
-  bool centered=false;
-  bool kicked = false;
+  bool centered = false;
+  bool kicked = true;
 
 	uint32_t taskTimer = 0;
   uint32_t pixyTimer = 0;
@@ -75,11 +73,7 @@ private:
 
   int32_t startLeftvalue = 0;
   int32_t startRightvalue = 0;
-  //int32_t startValue = 0;
 
-  //float targetDistance = 0;
-  //float radius = 0;
-  //float speed = 0;
   float targetTurningDistance = 0;
   
 
@@ -89,10 +83,9 @@ public:
 
   void doTask();
   Task makeDecision(uint16_t actualBlocks, Task lastTask);
-  Task makeDecisionGoalie(uint16_t actualBlocks, Task lastTask);
+  Task makeDecisionGoalkeeper(uint16_t actualBlocks, Task lastTask);
 
   void goToObject(int object);
-  void scoreGoal();
   void kickBall();
   void avoidObject();
   void centerBall();
@@ -107,7 +100,6 @@ public:
   void getSignatureIndexes(uint16_t actualBlocks);
   bool isVisible(int object);
   void calculateTrajectory();
-  void calculateTrajectory2();
   double distanceToObject(int object_size, float real_size, bool measure_height);
   double distanceBetween(int16_t object1, int16_t object2);
   int16_t getXposDiff(int16_t object1, int16_t object2);
