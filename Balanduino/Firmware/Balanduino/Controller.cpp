@@ -82,29 +82,57 @@ Task Controller::makeDecision(uint16_t actualBlocks, Task lastTask) {
 
   //Set task depending on what pixy sees
   if(actualBlocks) {
-    if(isVisible(EDGE)){
-      if(objectDistance[EDGE] < 20) {
-        nextTask = avoid;
+    if(isVisible(BALL)) {
+      if(isVisible(GOAL2)){
+        int16_t diff = getXposDiff(BALL, GOAL2);
+        if(diff < 30){
+          nextTask = goToBall;
+        }
+        else{
+          if(lastTask != encMove){
+            calculateTrajectory();
+          }
+          nextTask = encMove;
+        }
       }
-    }
-    else if(isVisible(BALL) && isVisible(GOAL2)) {
-      int16_t diff = getXposDiff(BALL, GOAL2);
-      if(diff < 30){
-        nextTask = goToBall;
+      else if(isVisible(GOAL1)) {
+        if(lastTask != encMove){
+            calculateGoHome();
+          }
+        nextTask = encMove;
       }
       else{
+        nextTask = goToBall;
+      }
+    }
+    else if(!isVisible(BALL)) {
+      if(isVisible(GOAL2) && objectDistance[GOAL2] < 80){
         if(lastTask != encMove){
-          calculateTrajectory();
-        }
+            calculateGoHome();
+          }
         nextTask = encMove;
       }
     }
-    else if(isVisible(BALL)) {
-      nextTask = goToBall;
-    }
 
-    if(isVisible(BALL) && objectDistance[BALL] < 30)
-      nextTask = kick;
+    if(isVisible(PLAYER1)){
+      if(objectDistance[PLAYER1] < 40) {
+        nextTask = avoid;
+      }
+      else if(isVisible(BALL)){
+        if(distanceBetween(BALL,PLAYER1) < 100 && objectDistance[BALL] < 200){
+            nextTask = stay;
+        } 
+      }
+    }
+    if(isVisible(PLAYER2) && objectDistance[PLAYER2] < 40){
+      nextTask = avoid;
+    }
+    if(isVisible(GOAL1) && objectDistance[GOAL1] < 80) {
+      nextTask = avoid;
+    }
+    if(isVisible(EDGE) && objectDistance[EDGE] < 30){
+        nextTask = avoid;
+    }
   }
 
   //Set task depending on lastTask and nextTask
@@ -135,6 +163,7 @@ Task Controller::makeDecisionGoalkeeper(uint16_t actualBlocks, Task lastTask) {
     //   nextTask = search;
     // }
     if(isVisible(GOAL1) && objectDistance[GOAL1] < 100 && lastTask == goToGoal){
+      clearInstructionQueue();
       MoveInstruction m = MoveInstruction(line,70,0,20);
       moveInstructionQueue.push(m);
       nextTask = encMove;
@@ -498,12 +527,8 @@ void Controller::calculateTrajectory(){
   else if (alpha < 0)
     beta = beta - gamma;
 
-  if(l2 > 200) {
-    l2 = l2*0.5;
-  }
-  if(r2 < 20) {
-    r2 = 20;
-  }
+  l2 = constrain(l2,10,200);
+  r2 = constrain(r2,15,400);
 
   MoveInstruction m;
   if(alpha > 0 && beta < 0) { //Ball to the right of goal and left of robot
@@ -542,6 +567,29 @@ void Controller::calculateTrajectory(){
     m = MoveInstruction(line, l2, r2,30);
     moveInstructionQueue.push(m);
   }
+}
+
+void Controller::calculateGoHome(){
+  clearInstructionQueue();
+
+  double angleDiff = 180;
+  float distance = 150;
+
+  if(isVisible(GOAL1)) {
+    int16_t xPosGoal = pixy.blocks[objectIndex[GOAL1]].x;
+    angleDiff = ((xPosGoal-160)/320.0)*75.0*(3.1415/180.0);
+  }
+  if(isVisible(BALL)){
+    distance = objectDistance[BALL] + 100;
+  }
+
+  distance = constrain(distance,100,300);
+
+  MoveInstruction m = MoveInstruction(spin,angleDiff*0.8,25);
+  moveInstructionQueue.push(m);
+
+  m = MoveInstruction(line,distance,0,25);
+  moveInstructionQueue.push(m);
 }
 
 //Takes the object's size in pixels and converts it to distance in cm.

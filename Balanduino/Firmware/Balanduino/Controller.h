@@ -100,6 +100,7 @@ public:
   void getSignatureIndexes(uint16_t actualBlocks);
   bool isVisible(int object);
   void calculateTrajectory();
+  void calculateGoHome();
   double distanceToObject(int object_size, float real_size, bool measure_height);
   double distanceBetween(int16_t object1, int16_t object2);
   int16_t getXposDiff(int16_t object1, int16_t object2);
