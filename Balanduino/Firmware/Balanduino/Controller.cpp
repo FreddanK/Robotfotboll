@@ -436,7 +436,6 @@ void Controller::clearInstructionQueue(){
 }
 
 void Controller::getSignatureIndexes(uint16_t actualBlocks) {
-  
   for(int i=0; i<6;i++){
     objectIndex[i] = -1;
     objectDistance[i] = -1;
@@ -447,38 +446,49 @@ void Controller::getSignatureIndexes(uint16_t actualBlocks) {
     if(signature == SIGN_BALL) { //Ball
       if(objectIndex[BALL] == -1) { //only store information about the closest object
         objectIndex[BALL] = i;
-        objectDistance[BALL] = distanceToObject(pixy.blocks[i].width,REAL_WIDTH_BALL,false);
+        if(pixy.blocks[i].width >= pixy.blocks[i].height){
+          objectDistance[BALL] = distanceToObject(pixy.blocks[i].width,REAL_WIDTH_BALL,false);
+        }
+        else {
+          objectDistance[BALL] = distanceToObject(pixy.blocks[i].height,REAL_WIDTH_BALL,true);
+        }
       }
     }
     else if(signature == SIGN_GOAL){ //Opponent goal
-      uint16_t angle = pixy.blocks[i].angle; //TODO, angle doesen't seem to update as often as the rest of the parameters from the pixy, so it is not used right now
-      if(objectIndex[GOAL2] == -1) { //only store information about the closest object
-        objectIndex[GOAL2] = i;
-        objectDistance[GOAL2] = distanceToObject(pixy.blocks[i].height,REAL_HEIGHT_GOAL,true);
-      }
-      /*
-      if(90<angle && angle<=180 || -180<=angle && angle<-90){
-        objectIndex[GOAL1] = i; 
-      }
-      else if(-90 < angle && angle < 90) {
-        objectIndex[GOAL2] = i;
-      }
-      */
-    }
-    else if(signature = SIGN_PLAYER) {  //Opponent player
-      uint16_t angle = pixy.blocks[i].angle; //TODO, angle doesen't seem to update as often as the rest of the parameters from the pixy, so it is not used right now
-      if(objectIndex[PLAYER2] == -1) { //only store information about the closest object
-        objectIndex[PLAYER2] = i;
-        objectDistance[PLAYER2] = distanceToObject(pixy.blocks[i].height,REAL_HEIGHT_PLAYER,true);
-      }
-      /*
+      int16_t angle = pixy.blocks[i].angle;
       if(-180<angle && angle<0){
-        objectSeen[PLAYER1] = i;
+        if(objectIndex[GOAL1] == -1){
+          objectIndex[GOAL1] = i;
+          objectDistance[GOAL1] = distanceToObject(pixy.blocks[i].height,REAL_HEIGHT_GOAL,true);
+        }
       }
       else if(0<angle && angle<180) {
-        objectSeen[PLAYER2] = i;
+        if(objectIndex[GOAL2] == -1){
+          objectIndex[GOAL2] = i;
+          objectDistance[GOAL2] = distanceToObject(pixy.blocks[i].height,REAL_HEIGHT_GOAL,true);
+        }
       }
-      */
+    }
+    else if(signature = SIGN_PLAYER) {  //Opponent player
+      int16_t angle = pixy.blocks[i].angle;
+      if(-180<angle && angle<0){
+        if(objectIndex[PLAYER1] == -1){
+          objectIndex[PLAYER1] = i;
+          objectDistance[PLAYER1] = distanceToObject(pixy.blocks[i].height,REAL_HEIGHT_PLAYER,true);
+        }
+      }
+      else if(0<angle && angle<180) {
+        if(objectIndex[PLAYER2] == -1){
+          objectIndex[PLAYER2] = i;
+          objectDistance[PLAYER2] = distanceToObject(pixy.blocks[i].height,REAL_HEIGHT_PLAYER,true);
+        }
+      }
+    }
+    else if(signature == SIGN_EDGE) {
+      if(objectIndex[EDGE] == -1){
+        objectIndex[EDGE] = i;
+        objectDistance[EDGE] = distanceToObject(pixy.blocks[i].height,REAL_HEIGHT_EDGE,true);
+      }
     }
   }
 }

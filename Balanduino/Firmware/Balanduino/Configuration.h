@@ -19,11 +19,11 @@ const bool GOALKEEPER = true;
 
 //These constants holds the indexes for each object in
 //the arrays 'objectIndex' and 'objectDistance'.
-const int BALL = 0;		//Signature 1 (Ball)
-const int GOAL1 = 1;	//Signature 45(octal) 90 < theta <= 180 and -180 <= theta <-90 (Own goal)
-const int GOAL2 = 2;	//Signature 45(octal) -90 < theta < 90 (Opponents goal, yellow(left) blue(right))
-const int PLAYER1 = 3;	//Signature 23(octal) -180 < theta < 0  (Team member)
-const int PLAYER2 = 4;	//Signature 23(octal) 0 < theta < 180 (Opponent, purple(top) green(bottom)
+const int BALL = 0;
+const int GOAL1 = 1;
+const int GOAL2 = 2; 
+const int PLAYER1 = 3; 
+const int PLAYER2 = 4; 
 const int EDGE = 5;
 
 //These constants holds the actual signatures that Pixy was taught.
@@ -32,10 +32,11 @@ const int SIGN_GOAL = 045;
 const int SIGN_PLAYER = 023;
 const int SIGN_EDGE = 067;
 
-//These constants holds the real with in cm for all objects.
+//These constants holds the real size in cm for all objects.
 const int REAL_WIDTH_BALL = 14;
 const int REAL_HEIGHT_GOAL = 47;
 const int REAL_HEIGHT_PLAYER = 15;
+const int REAL_HEIGHT_EDGE = 3;
 
 
 #endif
