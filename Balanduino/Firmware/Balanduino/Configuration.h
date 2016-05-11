@@ -17,15 +17,6 @@ and how they have been taught to Pixy.
 
 const bool GOALKEEPER = true;
 
-//These constants holds the indexes for each object in
-//the arrays 'objectIndex' and 'objectDistance'.
-const int BALL = 0;
-const int GOAL1 = 1;
-const int GOAL2 = 2; 
-const int PLAYER1 = 3; 
-const int PLAYER2 = 4; 
-const int EDGE = 5;
-
 //These constants holds the actual signatures that Pixy was taught.
 const int SIGN_BALL = 1;
 const int SIGN_GOAL = 045;
@@ -37,6 +28,17 @@ const int REAL_WIDTH_BALL = 14;
 const int REAL_HEIGHT_GOAL = 47;
 const int REAL_HEIGHT_PLAYER = 15;
 const int REAL_HEIGHT_EDGE = 3;
+
+//These constants holds the indexes for each object in
+//the arrays 'objectIndex' and 'objectDistance'.
+//DO NOT CHANGE THESE!
+//Changing them might break the program
+const int BALL = 0;
+const int GOAL1 = 1;
+const int GOAL2 = 2; 
+const int PLAYER1 = 3; 
+const int PLAYER2 = 4; 
+const int EDGE = 5;
 
 
 #endif

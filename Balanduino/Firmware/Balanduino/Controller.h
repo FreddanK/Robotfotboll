@@ -28,7 +28,6 @@ enum Task {
   goToGoal,
 	kick,
 	avoid,
-  center,
   encMove,
   stay,
 };
@@ -88,7 +87,6 @@ public:
   void goToObject(int object);
   void kickBall();
   void avoidObject();
-  void centerBall();
   void findBall();
   void findGoal();
 

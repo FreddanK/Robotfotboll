@@ -51,16 +51,13 @@ void Controller::doTask() {
     goToObject(BALL);
   }
   else if(task == goToGoal){
-    goToObject(GOAL2);
+    goToObject(GOAL1);
   }
   else if(task == kick) {
     kickBall();
   }
   else if(task == avoid) {
     avoidObject();
-  }
-  else if(task == center){
-    centerBall(); 
   }
   else if(task == encMove) {
     if(getNewMove == true)
@@ -242,49 +239,61 @@ void Controller::kickBall() {
   }
 }
 
-//avoids an object by turning away from it 
-//and towards the direction of the ball if the ball is visible
-void Controller::avoidObject() {
-  //gets the x-Position for the opponent to avoid and the ball
-  //by first checking their signatures position integer for the blocks array
-  uint16_t xPosBall = pixy.blocks[objectIndex[BALL]].x;
-  uint16_t xPosObject = pixy.blocks[objectIndex[PLAYER2]].x;
-  //ballVisible = visible(BALL);
-  if(isVisible(BALL)){
-    //if the ball is to the left of the object turn left
-    if(xPosBall<xPosObject){
-      motor.steer(left,20);
-    }
-    //otherwise the ball is to the right of the object, then turn right
-    else{
-      motor.steer(right,20);
-    }
-  }
-  //If ball isn't visible
-  else{
-    //turn right if the object to avoid is to the left
-    //and left if the object to avoid is to the right
-    if(xPosObject<160){
-      motor.steer(right,20);
-    }
-    else if(xPosObject>160){
-      motor.steer(left,20);
-    }
-  }
-}
 
-//Centers the ball in pixys field of vision
-void Controller::centerBall(){ 
-  uint16_t xPosBall = pixy.blocks[objectIndex[BALL]].x;
-  if(xPosBall<150){
-    motor.steer(left,20);
+void Controller::avoidObject() {
+  //Check which object is closest. Disregard ball.
+  int closestObject = 1;
+
+  for(int i=1;i<6;i++){
+    if(objectDistance[closestObject] == -1){
+      closestObject = i;
+    }
+    else if(objectDistance[i] != -1){
+      if(objectDistance[i] <= objectDistance[closestObject]){
+        closestObject = i;
+      }
+    }
   }
-  else if(xPosBall>170){
-    motor.steer(right,20);
+  
+  uint16_t xBall = lastXPosBall;
+  const double pi = 3.1415;
+  
+  int16_t xObject = pixy.blocks[objectIndex[closestObject]].x;
+  int16_t xDiffObj = xObject - 160;
+  int16_t xDiffBallandObj = xBall - xObject;
+
+  double angle = 75; //(degrees)
+  double radius = 30;
+  double turnAngle = 30;
+
+  if(isVisible(BALL)) {
+    if(xDiffBallandObj >= 0) { //Ball to the right of object
+      angle = angle + (xDiffObj/320.0)*75.0;
+      radius = -radius; //Turn to the left
+    }
+    else if(xDiffBallandObj < 0) { //Ball to the left of object
+      angle = -angle + (xDiffObj/320.0)*75.0;
+    }
   }
-  else{
-    centered=true;
+  else {
+    if(xBall >= 160) { //Ball was last seen to the right
+      angle = 120;
+      radius = -radius;
+    }
+    else if(xBall < 160) { //Ball was last seen to the left
+      angle = - 120;
+    }
   }
+
+  double length = abs(radius)*(turnAngle*pi/180.0);
+
+  clearInstructionQueue();
+
+  MoveInstruction m = MoveInstruction(spin,angle,25);
+  moveInstructionQueue.push(m);
+  m = MoveInstruction(line,length,radius,20);
+  moveInstructionQueue.push(m);
+  task = encMove;
 }
 
 //Turn towards where the ball is
