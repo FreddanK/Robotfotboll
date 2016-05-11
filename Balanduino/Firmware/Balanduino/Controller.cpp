@@ -525,7 +525,8 @@ void Controller::calculateTrajectory(){
 
   double e = 30.0; // how far away from the ball the robot should be aligned shoting at the goal
   double b2 = sqrt(sq(b) + sq(e) + 2.0*b*e*cos(phi)); // cos(pi-phi) = -cos(phi)
-  double phi2 = pi - asin(b*sin(phi)/b2); // sin(pi-phi) = sin(phi)
+  //double phi2 = pi - asin(b*sin(phi)/b2); // sin(pi-phi) = sin(phi) //sinussatsen, kan ge problem
+  double phi2 = acos((sq(e)+sq(b2)-sq(b))/(2.0*e*b2)); // sin(pi-phi) = sin(phi) //cosinussatsen
   double r2 = b2 / (2.0*sin(phi2));
   double l2 = r2 * 2.0 * (pi - phi2)*0.7;
   double gamma = phi - phi2;
