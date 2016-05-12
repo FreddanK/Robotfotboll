@@ -58,7 +58,6 @@ private:
   int16_t objectIndex[6];
   float objectDistance[6];
 
-  bool centered = false;
   bool kicked = true;
 
 	uint32_t taskTimer = 0;
@@ -86,7 +85,7 @@ public:
 
   void goToObject(int object);
   void kickBall();
-  void avoidObject();
+  void calculateAvoidObject();
   void findBall();
   void findGoal();
 

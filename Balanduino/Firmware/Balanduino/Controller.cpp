@@ -57,7 +57,10 @@ void Controller::doTask() {
     kickBall();
   }
   else if(task == avoid) {
-    avoidObject();
+    if(getNewMove == true)
+      setupEncoderMove();
+    else
+      encoderMove();
   }
   else if(task == encMove) {
     if(getNewMove == true)
@@ -139,6 +142,13 @@ Task Controller::makeDecision(uint16_t actualBlocks, Task lastTask) {
   if(lastTask == kick || lastTask == encMove){
     if(nextTask != avoid){
       nextTask = lastTask;
+    }
+  }
+
+  if(nextTask == avoid || lastTask == avoid){
+    if(lastTask != avoid){
+      calculateAvoidObject();
+      getNewMove = true;
     }
   }
 
@@ -240,7 +250,7 @@ void Controller::kickBall() {
 }
 
 
-void Controller::avoidObject() {
+void Controller::calculateAvoidObject() {
   //Check which object is closest. Disregard ball.
   int closestObject = 1;
 
@@ -293,7 +303,6 @@ void Controller::avoidObject() {
   moveInstructionQueue.push(m);
   m = MoveInstruction(line,length,radius,20);
   moveInstructionQueue.push(m);
-  task = encMove;
 }
 
 //Turn towards where the ball is
@@ -594,6 +603,9 @@ void Controller::calculateGoHome(){
   }
 
   distance = constrain(distance,100,300);
+  if(distance > objectDistance[GOAL1]-40 && isVisible(GOAL1)){
+    distance = objectDistance[GOAL1]-40;
+  }
 
   MoveInstruction m = MoveInstruction(spin,25, angleDiff*0.8);
   moveInstructionQueue.push(m);
@@ -640,7 +652,6 @@ int16_t Controller::getXposDiff(int16_t object1, int16_t object2){
 
 void Controller::resetValues(){
   task = search;
-  centered = false;
   kicked = true;
   getNewMove = true;
   clearInstructionQueue();
