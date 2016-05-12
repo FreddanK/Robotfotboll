@@ -213,12 +213,14 @@ void Controller::goToObject(int object) {
   uint16_t width = pixy.blocks[objectIndex[object]].width;
   
   if(xPos<130){
-    motor.steer(left,30);
-    motor.steer(forward,10);
+    // motor.steer(left,30);
+    // motor.steer(forward,10);
+    motor.steer(forward,10,left,30);
   }
   else if(xPos>190){
-    motor.steer(right,30);
-    motor.steer(forward,10);
+    // motor.steer(right,30);
+    // motor.steer(forward,10);
+    motor.steer(forward,10,right,30);
   }
   else if(objectDistance[object] >= 30 && objectDistance[object] < 600){
     motor.steer(forward,30);

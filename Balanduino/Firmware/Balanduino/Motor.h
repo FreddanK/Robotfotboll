@@ -127,6 +127,7 @@ public:
   void soundBuzzer(int delay);
 
   void steer(Command command);
+  void steer(Command command1, float amount1, Command command2, float amount2);
   void steer(Command command, float amount);
   void steer(Command command, float amountTurn, float amountForward);
   float scale(float input, float inputMin, float inputMax, float outputMin, float outputMax);

@@ -516,8 +516,48 @@ void Motor::soundBuzzer(int msDelay){
 void Motor::steer(Command command) {
   steer(command, 0, 0);
 }
-void Motor::steer(Command command, float amount) {
 
+void Motor::steer(Command command1, float amount1, Command command2, float amount2){
+  steerStop = false;
+
+  if(command1 == forward){
+    targetOffset = scale(amount1, 0, 50, 0, cfg.controlAngleLimit);
+  }
+  else if(command1 == backward){
+    targetOffset = -scale(amount1, 0, 50, 0, cfg.controlAngleLimit);
+  }
+  else if(command1 == right){
+    turningOffset = scale(amount1, 0, 50, 0, cfg.turningLimit);
+  }
+  else if(command1 == left){
+    turningOffset = -scale(amount1, 0, 50, 0, cfg.turningLimit);
+  }
+  else {
+    steer(stop,0,0);
+  }
+  if(command2 == forward){
+    targetOffset = scale(amount2, 0, 50, 0, cfg.controlAngleLimit);
+  }
+  else if(command2 == backward){
+    targetOffset = -scale(amount2, 0, 50, 0, cfg.controlAngleLimit);
+  }
+  else if(command2 == right){
+    turningOffset = scale(amount2, 0, 50, 0, cfg.turningLimit);
+  }
+  else if(command2 == left){
+    turningOffset = -scale(amount2, 0, 50, 0, cfg.turningLimit);
+  }
+  else {
+    steer(stop,0,0);
+  }
+
+  lastCommand = command2;
+}
+
+void Motor::steer(Command command, float amount) {
+  targetOffset = 0;
+  turningOffset = 0;
+  
   if(command == forward){
     steerStop = false;
     targetOffset = scale(amount, 0, 50, 0, cfg.controlAngleLimit);
@@ -539,6 +579,7 @@ void Motor::steer(Command command, float amount) {
   }
   lastCommand = command;  
 }
+
 void Motor::steer(Command command, float amountTurn, float amountForward) {
   commandSent = true; // Used to see if there has already been send a command or not
 
