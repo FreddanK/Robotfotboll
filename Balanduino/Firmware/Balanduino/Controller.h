@@ -25,6 +25,7 @@ This is for a player with an offensive role.
 enum Task {
 	search,
   goToBall,
+  findGoal1,
   goToGoal,
 	kick,
 	avoid,

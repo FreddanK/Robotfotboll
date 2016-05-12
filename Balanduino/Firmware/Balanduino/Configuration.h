@@ -15,7 +15,7 @@ and how they have been taught to Pixy.
 #ifndef _configuration_h_
 #define _configuration_h_
 
-const bool GOALKEEPER = false;
+const bool GOALKEEPER = true;
 
 //These constants holds the actual signatures that Pixy was taught.
 const int SIGN_BALL = 1;

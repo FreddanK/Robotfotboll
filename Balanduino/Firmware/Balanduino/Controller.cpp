@@ -50,6 +50,9 @@ void Controller::doTask() {
   else if(task == goToBall) {
     goToObject(BALL);
   }
+  else if(task == findGoal1){
+    findGoal();
+  }
   else if(task == goToGoal){
     goToObject(GOAL1);
   }
@@ -166,16 +169,6 @@ Task Controller::makeDecisionGoalkeeper(uint16_t actualBlocks, Task lastTask) {
 
   //Set task depending on what pixy sees
   if(actualBlocks) {
-    // if(isVisible(GOAL1) && objectDistance[GOAL1] < 30){
-    //   nextTask = search;
-    // }
-    if(isVisible(GOAL1) && objectDistance[GOAL1] < 100 && lastTask == goToGoal){
-      clearInstructionQueue();
-      MoveInstruction m = MoveInstruction(line,70,0,20);
-      moveInstructionQueue.push(m);
-      nextTask = encMove;
-    }
-
     if(isVisible(BALL)) {
       if(objectDistance[BALL] < 80){
         nextTask = goToBall;
@@ -184,14 +177,34 @@ Task Controller::makeDecisionGoalkeeper(uint16_t actualBlocks, Task lastTask) {
         nextTask = stay;
       }
     }
+
+    if(kicked){
+      if(isVisible(GOAL1)){
+        nextTask = goToGoal;
+        if(objectDistance[GOAL1] < 40){
+          kicked = false;
+        }
+      }
+      else {
+        nextTask = findGoal1;
+      }
+    }
   }
+
+    // if(isVisible(GOAL1) && objectDistance[GOAL1] < 100 && lastTask == goToGoal){
+    //   clearInstructionQueue();
+    //   MoveInstruction m = MoveInstruction(line,objectDistance[GOAL1]-30,0,20);
+    //   moveInstructionQueue.push(m);
+    //   nextTask = encMove;
+    // }
+  // }
 
   //Set task depending on lastTask
 
-  if(kicked || lastTask == goToGoal){
-    nextTask = goToGoal;
-    kicked = false;
-  }
+  // if(kicked || lastTask == goToGoal){
+  //   nextTask = goToGoal;
+  //   kicked = false;
+  // }
 
   //kick and encMove can only be interrupted by avoid
   //or by the functions themselves
