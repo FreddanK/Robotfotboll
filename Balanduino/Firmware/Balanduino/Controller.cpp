@@ -204,11 +204,11 @@ void Controller::goToObject(int object) {
   
   if(xPos<130){
     motor.steer(left,30);
-    motor.steer(forward,5);
+    motor.steer(forward,10);
   }
   else if(xPos>190){
     motor.steer(right,30);
-    motor.steer(forward,5);
+    motor.steer(forward,10);
   }
   else if(objectDistance[object] >= 30 && objectDistance[object] < 600){
     motor.steer(forward,30);
@@ -264,7 +264,7 @@ void Controller::avoidObject() {
 
   double angle = 75; //(degrees)
   double radius = 30;
-  double turnAngle = 30;
+  double turnAngle = 45;
 
   if(isVisible(BALL)) {
     if(xDiffBallandObj >= 0) { //Ball to the right of object
@@ -289,7 +289,7 @@ void Controller::avoidObject() {
 
   clearInstructionQueue();
 
-  MoveInstruction m = MoveInstruction(spin,angle,25);
+  MoveInstruction m = MoveInstruction(spin,25,angle);
   moveInstructionQueue.push(m);
   m = MoveInstruction(line,length,radius,20);
   moveInstructionQueue.push(m);
@@ -543,7 +543,7 @@ void Controller::calculateTrajectory(){
   MoveInstruction m;
   if(alpha > 0 && beta < 0) { //Ball to the right of goal and left of robot
     double angle = theta2/2.0 - abs(beta);
-    angle = angle*0.8;
+    angle = angle*0.7;
     m = MoveInstruction(spin,30,angle*(180/pi));
     moveInstructionQueue.push(m); 
     
@@ -552,7 +552,7 @@ void Controller::calculateTrajectory(){
   }
   else if(alpha < 0 && beta > 0) { //Ball to the left of goal and right of robot
     double angle = -(theta2/2.0 - abs(beta));
-    angle = angle*0.8;
+    angle = angle*0.7;
     m = MoveInstruction(spin,30,angle*(180/pi));
     moveInstructionQueue.push(m); 
     
@@ -561,7 +561,7 @@ void Controller::calculateTrajectory(){
   }
   else if(alpha > 0 && beta > 0) { //Ball to the right of goal and right of robot
     double angle = theta2/2.0 + abs(beta);
-    angle = angle*0.8;
+    angle = angle*0.7;
     m = MoveInstruction(spin,30, angle*(180/pi));
     moveInstructionQueue.push(m); 
     
@@ -570,7 +570,7 @@ void Controller::calculateTrajectory(){
   }
   else if(alpha < 0 && beta < 0) { //Ball to the left of goal and left of robot
     double angle = -(theta2/2.0 + abs(beta));
-    angle = angle*0.8;
+    angle = angle*0.7;
     m = MoveInstruction(spin,30,angle*(180/pi));
     moveInstructionQueue.push(m); 
     
@@ -587,7 +587,7 @@ void Controller::calculateGoHome(){
 
   if(isVisible(GOAL1)) {
     int16_t xPosGoal = pixy.blocks[objectIndex[GOAL1]].x;
-    angleDiff = ((xPosGoal-160)/320.0)*75.0*(3.1415/180.0);
+    angleDiff = ((xPosGoal-160)/320.0)*75.0;
   }
   if(isVisible(BALL)){
     distance = objectDistance[BALL] + 100;
@@ -595,7 +595,7 @@ void Controller::calculateGoHome(){
 
   distance = constrain(distance,100,300);
 
-  MoveInstruction m = MoveInstruction(spin,angleDiff*0.8,25);
+  MoveInstruction m = MoveInstruction(spin,25, angleDiff*0.8);
   moveInstructionQueue.push(m);
 
   m = MoveInstruction(line,distance,0,25);

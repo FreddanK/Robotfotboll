@@ -86,7 +86,6 @@ void loop() {
   microphone.readMic();
   if(microphone.robotOn){
     controller.doTask(); //when running offensive player
-    //controllerGoal.doTask(); //when running goalkeeper
   }
   else{
     motor.steer(stop);
