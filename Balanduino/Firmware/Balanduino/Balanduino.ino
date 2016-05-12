@@ -83,14 +83,15 @@ void loop() {
   motor.checkMotors();
   //controller.tiltServo();
 
-  microphone.readMic();
-  if(microphone.robotOn){
-    controller.doTask(); //when running offensive player
-  }
-  else{
-    motor.steer(stop);
-    controller.resetValues();
-  }
+  // microphone.readMic();
+  // if(microphone.robotOn){
+  //   controller.doTask(); //when running offensive player
+  // }
+  // else{
+  //   motor.steer(stop);
+  //   controller.resetValues();
+  // }
+  controller.doTask();
 
   //Serial.print(motor.accAngle);Serial.print('\t');Serial.print(motor.gyroAngle);Serial.print('\t');Serial.println(motor.pitch);
   motor.calculatePitch();
@@ -99,7 +100,7 @@ void loop() {
 
   motor.updateEncoders();
 
-  tools.checkBatteryVoltage();
+ // tools.checkBatteryVoltage();
   /* Read the Bluetooth dongle and send PID and IMU values */
   tools.checkSerialData();
 

@@ -86,7 +86,7 @@ Task Controller::makeDecision(uint16_t actualBlocks, Task lastTask) {
   //Set task depending on what pixy sees
   if(actualBlocks) {
     if(isVisible(BALL)) {
-      if(isVisible(GOAL2)){
+      if(isVisible(GOAL2) && objectDistance[GOAL2] < 300){
         int16_t diff = getXposDiff(BALL, GOAL2);
         if(diff < 30){
           nextTask = goToBall;
@@ -181,7 +181,7 @@ Task Controller::makeDecisionGoalkeeper(uint16_t actualBlocks, Task lastTask) {
     if(kicked){
       if(isVisible(GOAL1)){
         nextTask = goToGoal;
-        if(objectDistance[GOAL1] < 40){
+        if(objectDistance[GOAL1] < 60){
           kicked = false;
         }
       }
@@ -236,7 +236,7 @@ void Controller::goToObject(int object) {
     motor.steer(forward,10,right,30);
   }
   else if(objectDistance[object] >= 30 && objectDistance[object] < 600){
-    motor.steer(forward,30);
+    motor.steer(forward,27);
   }
   else if(objectDistance[object] < 30){
     if(object == BALL) {
@@ -481,34 +481,58 @@ void Controller::getSignatureIndexes(uint16_t actualBlocks) {
         }
       }
     }
-    else if(signature == SIGN_GOAL){ //Opponent goal
-      int16_t angle = pixy.blocks[i].angle;
-      if(-180<angle && angle<0){
-        if(objectIndex[GOAL1] == -1){
-          objectIndex[GOAL1] = i;
-          objectDistance[GOAL1] = distanceToObject(pixy.blocks[i].height,REAL_HEIGHT_GOAL,true);
-        }
-      }
-      else if(0<angle && angle<180) {
-        if(objectIndex[GOAL2] == -1){
-          objectIndex[GOAL2] = i;
-          objectDistance[GOAL2] = distanceToObject(pixy.blocks[i].height,REAL_HEIGHT_GOAL,true);
-        }
+    // else if(signature == SIGN_GOAL){ //Opponent goal
+    //   int16_t angle = pixy.blocks[i].angle;
+    //   if(-180<angle && angle<0){
+    //     if(objectIndex[GOAL1] == -1){
+    //       objectIndex[GOAL1] = i;
+    //       objectDistance[GOAL1] = distanceToObject(pixy.blocks[i].height,REAL_HEIGHT_GOAL,true);
+    //     }
+    //   }
+    //   else if(0<angle && angle<180) {
+    //     if(objectIndex[GOAL2] == -1){
+    //       objectIndex[GOAL2] = i;
+    //       objectDistance[GOAL2] = distanceToObject(pixy.blocks[i].height,REAL_HEIGHT_GOAL,true);
+    //     }
+    //   }
+    // }
+    // else if(signature = SIGN_PLAYER) {  //Opponent player
+    //   int16_t angle = pixy.blocks[i].angle;
+    //   if(-180<angle && angle<0){
+    //     if(objectIndex[PLAYER1] == -1){
+    //       objectIndex[PLAYER1] = i;
+    //       objectDistance[PLAYER1] = distanceToObject(pixy.blocks[i].height,REAL_HEIGHT_PLAYER,true);
+    //     }
+    //   }
+    //   else if(0<angle && angle<180) {
+    //     if(objectIndex[PLAYER2] == -1){
+    //       objectIndex[PLAYER2] = i;
+    //       objectDistance[PLAYER2] = distanceToObject(pixy.blocks[i].height,REAL_HEIGHT_PLAYER,true);
+    //     }
+    //   }
+    // }
+    else if(signature == SIGN_GOAL1) {
+      if(objectIndex[GOAL1] == -1){
+        objectIndex[GOAL1] = i;
+        objectDistance[GOAL1] = distanceToObject(pixy.blocks[i].height,REAL_HEIGHT_GOAL1,true);
       }
     }
-    else if(signature = SIGN_PLAYER) {  //Opponent player
-      int16_t angle = pixy.blocks[i].angle;
-      if(-180<angle && angle<0){
-        if(objectIndex[PLAYER1] == -1){
-          objectIndex[PLAYER1] = i;
-          objectDistance[PLAYER1] = distanceToObject(pixy.blocks[i].height,REAL_HEIGHT_PLAYER,true);
-        }
+    else if(signature == SIGN_GOAL2) {
+      if(objectIndex[GOAL2] == -1){
+        objectIndex[GOAL2] = i;
+        objectDistance[GOAL2] = distanceToObject(pixy.blocks[i].height,REAL_HEIGHT_GOAL2,true);
       }
-      else if(0<angle && angle<180) {
-        if(objectIndex[PLAYER2] == -1){
-          objectIndex[PLAYER2] = i;
-          objectDistance[PLAYER2] = distanceToObject(pixy.blocks[i].height,REAL_HEIGHT_PLAYER,true);
-        }
+    }
+    else if(signature == SIGN_PLAYER1) {
+      if(objectIndex[PLAYER1] == -1){
+        objectIndex[PLAYER1] = i;
+        objectDistance[PLAYER1] = distanceToObject(pixy.blocks[i].height,REAL_HEIGHT_PLAYER1,true);
+      }
+    }
+    else if(signature == SIGN_PLAYER2) {
+      if(objectIndex[PLAYER2] == -1){
+        objectIndex[PLAYER2] = i;
+        objectDistance[PLAYER2] = distanceToObject(pixy.blocks[i].height,REAL_HEIGHT_PLAYER2,true);
       }
     }
     else if(signature == SIGN_EDGE) {
@@ -571,7 +595,7 @@ void Controller::calculateTrajectory(){
     m = MoveInstruction(spin,30,angle*(180/pi));
     moveInstructionQueue.push(m); 
     
-    m = MoveInstruction(line, l2, -r2,30);
+    m = MoveInstruction(line, l2, -r2,25);
     moveInstructionQueue.push(m);
   }
   else if(alpha < 0 && beta > 0) { //Ball to the left of goal and right of robot
@@ -580,7 +604,7 @@ void Controller::calculateTrajectory(){
     m = MoveInstruction(spin,30,angle*(180/pi));
     moveInstructionQueue.push(m); 
     
-    m = MoveInstruction(line, l2, r2,30);
+    m = MoveInstruction(line, l2, r2,25);
     moveInstructionQueue.push(m);
   }
   else if(alpha > 0 && beta > 0) { //Ball to the right of goal and right of robot
@@ -589,7 +613,7 @@ void Controller::calculateTrajectory(){
     m = MoveInstruction(spin,30, angle*(180/pi));
     moveInstructionQueue.push(m); 
     
-    m = MoveInstruction(line, l2, -r2,30);
+    m = MoveInstruction(line, l2, -r2,25);
     moveInstructionQueue.push(m);
   }
   else if(alpha < 0 && beta < 0) { //Ball to the left of goal and left of robot
@@ -598,7 +622,7 @@ void Controller::calculateTrajectory(){
     m = MoveInstruction(spin,30,angle*(180/pi));
     moveInstructionQueue.push(m); 
     
-    m = MoveInstruction(line, l2, r2,30);
+    m = MoveInstruction(line, l2, r2,25);
     moveInstructionQueue.push(m);
   }
 }

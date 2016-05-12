@@ -15,19 +15,30 @@ and how they have been taught to Pixy.
 #ifndef _configuration_h_
 #define _configuration_h_
 
-const bool GOALKEEPER = true;
+const bool GOALKEEPER = false;
+
+//Ball 1
+//Purple 2
+//Yellow 3
+//Green 4
+//Blue 5
+//
 
 //These constants holds the actual signatures that Pixy was taught.
 const int SIGN_BALL = 1;
-const int SIGN_GOAL = 045;
-const int SIGN_PLAYER = 023;
-const int SIGN_EDGE = 067;
+const int SIGN_GOAL1 = 023;
+const int SIGN_GOAL2 = 025;
+const int SIGN_PLAYER1 = 077;
+const int SIGN_PLAYER2 = 04;
+const int SIGN_EDGE = 035;
 
 //These constants holds the real size in cm for all objects.
 const int REAL_WIDTH_BALL = 14;
-const int REAL_HEIGHT_GOAL = 47;
-const int REAL_HEIGHT_PLAYER = 15;
-const int REAL_HEIGHT_EDGE = 3;
+const int REAL_HEIGHT_GOAL1 = 38;
+const int REAL_HEIGHT_GOAL2 = 38;
+const int REAL_HEIGHT_PLAYER1 = 10;
+const int REAL_HEIGHT_PLAYER2 = 6;
+const int REAL_HEIGHT_EDGE = 10;
 
 //These constants holds the indexes for each object in
 //the arrays 'objectIndex' and 'objectDistance'.
