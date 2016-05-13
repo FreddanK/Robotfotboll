@@ -35,12 +35,13 @@ void Controller::doTask() {
     if(isVisible(GOAL2)){
       lastXPosGoal=pixy.blocks[objectIndex[GOAL2]].x;
     }
-    if(!GOALKEEPER){
-      task = makeDecision(blocksCount, task);
-    }
-    else{
-      task = makeDecisionGoalkeeper(blocksCount, task);
-    }
+    // if(!GOALKEEPER){
+    //   task = makeDecision(blocksCount, task);
+    // }
+    // else{
+    //   task = makeDecisionGoalkeeper(blocksCount, task);
+    // }
+    task = makeDecisionTest(blocksCount, task);
   }
   
   //Call different functions depending on current task
@@ -78,6 +79,27 @@ void Controller::doTask() {
     motor.steer(stop,0);
   }
 }
+
+Task Controller::makeDecisionTest(uint16_t actualBlocks, Task lastTask) {
+  Task nextTask = stay;
+  if(doOnce){
+    MoveInstruction m = MoveInstruction(spin,360, 20);
+    moveInstructionQueue.push(m);
+    nextTask = encMove;
+  }
+
+  if(lastTask == encMove){
+    nextTask = lastTask;
+  }
+
+  //Return next task, reset taskTimer if task has been changed
+  if(nextTask != lastTask){
+    taskTimer = millis();
+  }
+  return nextTask;
+
+}
+
 
 //Decide what the next task should be (offensive player)
 Task Controller::makeDecision(uint16_t actualBlocks, Task lastTask) {
@@ -356,6 +378,7 @@ void Controller::setupEncoderMove() {
   else{
     motor.turningRadius = 0;
     task = search;
+    doOnce = false;
   }
   
 }
@@ -429,7 +452,8 @@ void Controller::encoderMove(){
   }
   if(moveFinished){
     motor.steer(stop);
-    moveInstructionQueue.pop();
+    if(!moveInstructionQueue.isEmpty())
+      moveInstructionQueue.pop();
     getNewMove = true;
   }
 }

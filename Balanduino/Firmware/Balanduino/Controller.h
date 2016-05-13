@@ -60,6 +60,7 @@ private:
   float objectDistance[6];
 
   bool kicked = true;
+  bool doOnce = true;
 
 	uint32_t taskTimer = 0;
   uint32_t pixyTimer = 0;
@@ -67,7 +68,7 @@ private:
   uint16_t lastXPosBall;
   uint16_t lastXPosGoal;
 
-  QueueList <MoveInstruction> moveInstructionQueue;
+  
   bool getNewMove = true;
 
   int32_t startLeftvalue = 0;
@@ -78,11 +79,13 @@ private:
 
 
 public:
+  QueueList <MoveInstruction> moveInstructionQueue;
 	Controller(Motor& m, Pixy& p) : motor(m), pixy(p) {}
 
   void doTask();
   Task makeDecision(uint16_t actualBlocks, Task lastTask);
   Task makeDecisionGoalkeeper(uint16_t actualBlocks, Task lastTask);
+  Task makeDecisionTest(uint16_t actualBlocks, Task lastTask);
 
   void goToObject(int object);
   void kickBall();

@@ -76,12 +76,19 @@ void setup() {
   motor.soundBuzzer(100);
 
   motor.setupTiming();
+
+  MoveInstruction m = MoveInstruction(line,300,0,20);
+  controller.moveInstructionQueue.push(m);
+  controller.setupEncoderMove();
 }
 
 void loop() {
 
   motor.checkMotors();
   //controller.tiltServo();
+  if(millis() > 2000){
+    controller.encoderMove();
+  }
 
   // microphone.readMic();
   // if(microphone.robotOn){
@@ -91,7 +98,7 @@ void loop() {
   //   motor.steer(stop);
   //   controller.resetValues();
   // }
-  controller.doTask();
+  // controller.doTask();
 
   //Serial.print(motor.accAngle);Serial.print('\t');Serial.print(motor.gyroAngle);Serial.print('\t');Serial.println(motor.pitch);
   motor.calculatePitch();

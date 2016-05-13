@@ -204,7 +204,7 @@ void Motor::updatePID(float restAngle, float offset, float turning, float dt) {
   }
 
   float PIDLeft = PIDValue * radiusLeftScaler  + turning;
-  float PIDRight = PIDValue * radiusRightScaler - turning;
+  float PIDRight = PIDValue * radiusRightScaler*0.97 - turning;
 
   //float PIDLeft = PIDValue + turning;
   //float PIDRight = PIDValue - turning;
