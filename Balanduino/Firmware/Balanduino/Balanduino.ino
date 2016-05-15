@@ -16,7 +16,6 @@ This is the main program for the soccer playing robot.
 #include "Motor.h"
 #include "Eeprom.h"
 #include "Controller.h"
-//#include "ControllerGoal.h"
 #include "Tools.h"
 #include "Bluetooth.h"
 #include "Microphone.h"
@@ -83,15 +82,15 @@ void loop() {
   motor.checkMotors();
   //controller.tiltServo();
 
-  // microphone.readMic();
-  // if(microphone.robotOn){
-  //   controller.doTask(); //when running offensive player
-  // }
-  // else{
-  //   motor.steer(stop);
-  //   controller.resetValues();
-  // }
-  controller.doTask();
+  microphone.readMic();
+  if(microphone.robotOn){
+    controller.doTask(); //when running offensive player
+  }
+  else{
+    motor.steer(stop);
+    controller.resetValues();
+  }
+  // controller.doTask();
 
   //Serial.print(motor.accAngle);Serial.print('\t');Serial.print(motor.gyroAngle);Serial.print('\t');Serial.println(motor.pitch);
   motor.calculatePitch();

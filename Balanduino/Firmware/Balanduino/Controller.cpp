@@ -86,9 +86,15 @@ Task Controller::makeDecision(uint16_t actualBlocks, Task lastTask) {
   //Set task depending on what pixy sees
   if(actualBlocks) {
     if(isVisible(BALL)) {
-      if(isVisible(GOAL2) && objectDistance[GOAL2] < 300){
+      if(isVisible(GOAL2)){
         int16_t diff = getXposDiff(BALL, GOAL2);
-        if(diff < 30){
+        uint16_t goalWidth = pixy.blocks[objectIndex[GOAL2]].width;
+        int16_t diff_limit = goalWidth;
+        diff_limit = constrain(diff_limit,30,200);
+        if(diff < diff_limit || objectDistance[BALL] < 40){
+          // if(lastTask == encMove){
+          //   lastTask = search;
+          // }
           nextTask = goToBall;
         }
         else{
@@ -153,6 +159,7 @@ Task Controller::makeDecision(uint16_t actualBlocks, Task lastTask) {
       calculateAvoidObject();
       getNewMove = true;
     }
+    nextTask = avoid;
   }
 
   //Return next task, reset taskTimer if task has been changed
@@ -236,7 +243,7 @@ void Controller::goToObject(int object) {
     motor.steer(forward,10,right,30);
   }
   else if(objectDistance[object] >= 30 && objectDistance[object] < 600){
-    motor.steer(forward,27);
+    motor.steer(forward,20);
   }
   else if(objectDistance[object] < 30){
     if(object == BALL) {
@@ -252,7 +259,7 @@ void Controller::goToObject(int object) {
 void Controller::kickBall() {
   uint32_t time_since_start = millis() - taskTimer;
   if (time_since_start<500){
-    motor.steer(forward,50);
+    motor.steer(forward,40);
   }
   else if(time_since_start>500 && time_since_start<2000){
     motor.steer(forward,0);
@@ -564,23 +571,22 @@ void Controller::calculateTrajectory(){
   double alpha = ((xPosBALL-xPosGOAL)/320.0)*75.0*(pi/180.0);
   double beta = ((xPosBALL-160)/320.0)*75.0*(pi/180.0);
   double d = distanceBetween(BALL, GOAL2);
-  double b = objectDistance[BALL];
+  double b1 = objectDistance[BALL];
   double c = objectDistance[GOAL2];
   //double phi = acos((sq(d)+sq(b)-sq(c))/(2.0*d*b)); //cosinussatsen
-  double phi = pi - asin(c*sin(abs(alpha))/d); //sinussatsen, går att välja alltid trubbig vinkel
-
-  double theta = 2.0*pi - 2.0*phi;
-  double r = b/(2.0*sin(theta/2.0));
-  double l = r * theta;
-
-  double e = 30.0; // how far away from the ball the robot should be aligned shoting at the goal
-  double b2 = sqrt(sq(b) + sq(e) + 2.0*b*e*cos(phi)); // cos(pi-phi) = -cos(phi)
-  //double phi2 = pi - asin(b*sin(phi)/b2); // sin(pi-phi) = sin(phi) //sinussatsen, kan ge problem
-  double phi2 = acos((sq(e)+sq(b2)-sq(b))/(2.0*e*b2)); // sin(pi-phi) = sin(phi) //cosinussatsen
-  double r2 = b2 / (2.0*sin(phi2));
-  double l2 = r2 * 2.0 * (pi - phi2)*0.7;
-  double gamma = phi - phi2;
-  double theta2 = 2.0*pi - 2.0*phi2; 
+  double phi1 = pi - asin(c*sin(abs(alpha))/d); //sinussatsen, går att välja alltid trubbig vinkel
+  double eps = pi - phi1;
+  double e = 40.0; // how far away from the ball the robot should be aligned shoting at the goal
+  
+  double b2 = sqrt(sq(b1) + sq(e) - 2.0*b1*e*cos(eps)); // cos(pi-phi) = -cos(phi)
+  
+  double phi2 = acos((sq(e)+sq(b2)-sq(b1))/(2.0*e*b2)); // sin(pi-phi) = sin(phi) //cosinussatsen
+  
+  double gamma = phi1 - phi2;
+  double theta = 2.0*eps+ 2.0*gamma;
+  double r2 = b2 / (2.0*sin(theta/2.0));
+  double l2 = r2 * theta*0.8;
+ 
 
   if (alpha > 0) 
     beta = beta + gamma;
@@ -592,39 +598,39 @@ void Controller::calculateTrajectory(){
 
   MoveInstruction m;
   if(alpha > 0 && beta < 0) { //Ball to the right of goal and left of robot
-    double angle = theta2/2.0 - abs(beta);
-    angle = angle*0.7;
+    double angle = theta/2.0 - abs(beta);
+    angle = angle*1;
     m = MoveInstruction(spin,30,angle*(180/pi));
     moveInstructionQueue.push(m); 
     
-    m = MoveInstruction(line, l2, -r2,25);
+    m = MoveInstruction(line, l2, -r2,20);
     moveInstructionQueue.push(m);
   }
   else if(alpha < 0 && beta > 0) { //Ball to the left of goal and right of robot
-    double angle = -(theta2/2.0 - abs(beta));
-    angle = angle*0.7;
+    double angle = -(theta/2.0 - abs(beta));
+    angle = angle*1;
     m = MoveInstruction(spin,30,angle*(180/pi));
     moveInstructionQueue.push(m); 
     
-    m = MoveInstruction(line, l2, r2,25);
+    m = MoveInstruction(line, l2, r2,20);
     moveInstructionQueue.push(m);
   }
   else if(alpha > 0 && beta > 0) { //Ball to the right of goal and right of robot
-    double angle = theta2/2.0 + abs(beta);
-    angle = angle*0.7;
+    double angle = theta/2.0 + abs(beta);
+    angle = angle*1;
     m = MoveInstruction(spin,30, angle*(180/pi));
     moveInstructionQueue.push(m); 
     
-    m = MoveInstruction(line, l2, -r2,25);
+    m = MoveInstruction(line, l2, -r2,20);
     moveInstructionQueue.push(m);
   }
   else if(alpha < 0 && beta < 0) { //Ball to the left of goal and left of robot
-    double angle = -(theta2/2.0 + abs(beta));
-    angle = angle*0.7;
+    double angle = -(theta/2.0 + abs(beta));
+    angle = angle*1;
     m = MoveInstruction(spin,30,angle*(180/pi));
     moveInstructionQueue.push(m); 
     
-    m = MoveInstruction(line, l2, r2,25);
+    m = MoveInstruction(line, l2, r2,20);
     moveInstructionQueue.push(m);
   }
 }

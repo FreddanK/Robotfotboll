@@ -550,32 +550,45 @@ void Motor::steer(Command command1, float amount1, Command command2, float amoun
   else {
     steer(stop,0,0);
   }
-
-  lastCommand = command2;
+  if(command1 == forward || command1 == backward){
+    lastCommand = command1;
+  }
+  else{
+    lastCommand = command2;
+  }
 }
 
 void Motor::steer(Command command, float amount) {
   targetOffset = 0;
   turningOffset = 0;
+  steerStop = false;
   
   if(command == forward){
-    steerStop = false;
     targetOffset = scale(amount, 0, 50, 0, cfg.controlAngleLimit);
   }
   else if(command == backward){
-    steerStop = false;
     targetOffset = -scale(amount, 0, 50, 0, cfg.controlAngleLimit);
   }
   else if(command == right){
-    steerStop = true;
     turningOffset = scale(amount, 0, 50, 0, cfg.turningLimit);
   }
   else if(command == left){
-    steerStop = true;
     turningOffset = -scale(amount, 0, 50, 0, cfg.turningLimit);
   }
   else {
     steer(stop,0,0);
+  }
+  if (command == left || command == right) {   
+    if (lastCommand == forward || lastCommand == backward) { // Set new stop position
+      targetPosition = getWheelsPosition();
+      stopped = false;
+      stopTimer = millis();
+    }
+    if(millis()-stopTimer > 500){
+      steerStop = true;
+      targetPosition = getWheelsPosition();
+      stopped = false;
+    }
   }
   lastCommand = command;  
 }
@@ -606,8 +619,7 @@ void Motor::steer(Command command, float amountTurn, float amountForward) {
       turningOffset = -scale(amountForward, 0, -45, 0, cfg.turningLimit);
   }
 
-  if (command == stop) {
-    
+  if (command == stop) {   
     if (lastCommand != stop) { // Set new stop position
       targetPosition = getWheelsPosition();
       stopped = false;

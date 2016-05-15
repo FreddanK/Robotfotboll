@@ -26,10 +26,10 @@ const bool GOALKEEPER = false;
 
 //These constants holds the actual signatures that Pixy was taught.
 const int SIGN_BALL = 1;
-const int SIGN_GOAL1 = 023;
-const int SIGN_GOAL2 = 025;
+const int SIGN_GOAL1 = 045;
+const int SIGN_GOAL2 = 034;
 const int SIGN_PLAYER1 = 077;
-const int SIGN_PLAYER2 = 04;
+const int SIGN_PLAYER2 = 2;
 const int SIGN_EDGE = 035;
 
 //These constants holds the real size in cm for all objects.
@@ -37,7 +37,7 @@ const int REAL_WIDTH_BALL = 14;
 const int REAL_HEIGHT_GOAL1 = 38;
 const int REAL_HEIGHT_GOAL2 = 38;
 const int REAL_HEIGHT_PLAYER1 = 10;
-const int REAL_HEIGHT_PLAYER2 = 6;
+const int REAL_HEIGHT_PLAYER2 = 15;
 const int REAL_HEIGHT_EDGE = 10;
 
 //These constants holds the indexes for each object in
