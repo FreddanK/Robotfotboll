@@ -429,7 +429,9 @@ void Controller::encoderMove(){
   }
   if(moveFinished){
     motor.steer(stop);
-    moveInstructionQueue.pop();
+    if(!moveInstructionQueue.isEmpty()){
+      moveInstructionQueue.pop();
+    }
     getNewMove = true;
   }
 }

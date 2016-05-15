@@ -97,6 +97,7 @@ public:
   uint32_t imuTimer; // This is used to set a delay between sending IMU values
   uint32_t encoderTimer; // Timer used used to determine when to update the encoder values
   uint32_t reportTimer; // This is used to set a delay between sending report values
+  uint32_t stopTimer; //This is used for braking
 
   void updatePID(float restAngle, float offset, float turning, float dt);
   void moveMotor(Command motor, Command direction, float speedRaw);

@@ -607,8 +607,14 @@ void Motor::steer(Command command, float amountTurn, float amountForward) {
   }
 
   if (command == stop) {
-    steerStop = true;
+    
     if (lastCommand != stop) { // Set new stop position
+      targetPosition = getWheelsPosition();
+      stopped = false;
+      stopTimer = millis();
+    }
+    if(millis()-stopTimer > 500){
+      steerStop = true;
       targetPosition = getWheelsPosition();
       stopped = false;
     }
